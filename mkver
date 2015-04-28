@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+use Getopt::Std;
+use strict;
+
+my %options=();
+getopts('gv:', \%options);
+
+my $version = "git-" . `git rev-parse --short HEAD`;
+chomp $version;
+$version = $options{v} if defined $options{v};
+
+open VERSION, ">version.h";
+
+print VERSION "#ifndef VERSION_H\n";
+print VERSION "#define VERSION_H\n";
+print VERSION "#define VERSION \"$version\"\n";
+print VERSION "#endif\n";
+
+
