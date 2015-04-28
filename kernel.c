@@ -1,3 +1,5 @@
+#include "version.h"
+
 enum vga_color {
   COLOR_BLACK = 0,
   COLOR_BLUE = 1,
@@ -77,5 +79,5 @@ void kernel_main() {
   vga_setcolor(vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK));
   vga_write("OS");
   vga_setcolor(vga_color(COLOR_LIGHT_GREY, COLOR_BLACK));
-  vga_write(" v0 initialized\n");
+  vga_write(" version " VERSION " initialized\n");
 }
