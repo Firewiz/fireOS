@@ -34,3 +34,6 @@
 # Cross-compiler source and etcetera
 
 gcc-cross/
+
+# Emacs crap
+*~
