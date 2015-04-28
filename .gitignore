@@ -30,3 +30,7 @@
 
 # Debug files
 *.dSYM/
+
+# Cross-compiler source and etcetera
+
+gcc-cross/

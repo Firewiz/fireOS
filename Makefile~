@@ -1,0 +1,2 @@
+boot.o: boot.s
+	nasm -felf32 boot.s -o boot.o
