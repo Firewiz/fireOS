@@ -7,7 +7,10 @@ ASFLAGS=-felf32
 
 HDRS=vga.h stdlib.h asmintr.h
 OBJS=kernel.o vga.o stdlib.o asmintr.o boot.o
+PROG=fireos.bin
 
-all: fireos.bin
-fireos.bin: $(OBJS) $(HDRS)
-	$(CC) -T linker.ld -o fireos.bin -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
+all:$(PROG)
+$(PROG):$(OBJS) $(HDRS)
+	$(CC) -T linker.ld -o $(PROG) -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
+clean:
+	rm *.o $(PROG)
