@@ -38,3 +38,6 @@ gcc-cross/
 
 # Emacs crap
 *~
+
+# Auto-generated headers
+version.h

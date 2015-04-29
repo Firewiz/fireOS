@@ -9,8 +9,11 @@ HDRS=vga.h stdlib.h asmintr.h
 OBJS=kernel.o vga.o stdlib.o asmintr.o boot.o
 PROG=fireos.bin
 
-all:$(PROG)
+all:version.h $(PROG)
+version.h:
+	chmod +x mkver
+	./mkver
 $(PROG):$(OBJS) $(HDRS)
 	$(CC) -T linker.ld -o $(PROG) -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
 clean:
-	rm *.o $(PROG)
+	rm -f *.o $(PROG) version.h *~
