@@ -1,11 +1,19 @@
 export PATH := gcc-cross/bin/:$(PATH)
 CC=i686-elf-gcc
+AS=nasm
 
-all: fireos.bin
+CFLAGS=-ffreestanding -O2 -nostdlib -Wall -Wextra
+ASFLAGS=-felf32
 
-boot.o: boot.s
-	nasm -felf32 boot.s -o boot.o
-kernel.o: kernel.c
-	$(CC) -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-fireos.bin: boot.o kernel.o
-	$(CC) -T linker.ld -o fireos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+HDRS=vga.h stdlib.h asmintr.h
+OBJS=kernel.o vga.o stdlib.o asmintr.o boot.o
+PROG=fireos.bin
+
+all:version.h $(PROG)
+version.h:
+	chmod +x mkver
+	./mkver
+$(PROG):$(OBJS) $(HDRS)
+	$(CC) -T linker.ld -o $(PROG) -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
+clean:
+	rm -f *.o $(PROG) version.h *~
