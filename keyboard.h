@@ -8,33 +8,29 @@
 
 #define KB_BUFSIZE 32
 
-#define MASK_LCTRL 0x01
-#define MASK_LSHIFT 0x02
-#define MASK_RSHIFT 0x04
-#define MASK_RCTRL 0x08
-
 #define STATE_SHIFT 0x01
 
-#define MASK_SPECIAL 0xC0
-#define KEY_CAPSLOCK MASK_SPECIAL | 0
-#define KEY_F1 MASK_SPECIAL | 1
-#define KEY_F2 MASK_SPECIAL | 2
-#define KEY_F3 MASK_SPECIAL | 3
-#define KEY_F4 MASK_SPECIAL | 4
-#define KEY_F5 MASK_SPECIAL | 5
-#define KEY_F6 MASK_SPECIAL | 6
-#define KEY_F7 MASK_SPECIAL | 7
-#define KEY_F8 MASK_SPECIAL | 8
-#define KEY_F9 MASK_SPECIAL | 9
-#define KEY_F10 MASK_SPECIAL | 10
-#define KEY_F11 MASK_SPECIAL | 11
-#define KEY_F12 MASK_SPECIAL | 12
-#define KEY_NUM_LOCK MASK_SPECIAL |13
-#define KEY_SCROLL_LOCK MASK_SPECIAL | 14
+#define KEY_LSHIFT 0x80
+#define KEY_RSHIFT 0x81
+#define KEY_CAPSLOCK 0x82
+#define KEY_NUMLOCK 0x83
+#define KEY_SCROLLLOCK 0x84
+#define KEY_F1 0x85
+#define KEY_F2 0x86
+#define KEY_F3 0x87
+#define KEY_F4 0x88
+#define KEY_F5 0x89
+#define KEY_F6 0x8A
+#define KEY_F7 0x8B
+#define KEY_F8 0x8C
+#define KEY_F9 0x8D
+#define KEY_F10 0x8E
+#define KEY_F11 0x8F
+#define KEY_F12 0x90
 
 EXTERN unsigned char kb_buffer[KB_BUFSIZE];
 EXTERN char key_table[2][128];
-EXTERN int kb_write, kb_read, kb_state;
+EXTERN volatile int kb_write, kb_read, kb_state;
 
 void init_keyboard();
 unsigned char getkey();

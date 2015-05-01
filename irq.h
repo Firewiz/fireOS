@@ -2,8 +2,7 @@
 #define IRQ_H
 #include "idt.h"
 
-#define install_irq(handler, irq) install_handler(handler, irq + 32)
-
 void init_irq();
-
+void irq_common_handler(int inum);
+void install_irq(void *handler, int gate);
 #endif

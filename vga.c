@@ -69,6 +69,10 @@ void vga_setcurs(char x, char y) {
   outb(0x3D5, (unsigned char) (pos >> 8) & 0xFF);
 }
 
+void vga_updatepos() {
+  vga_setcurs(vga_col, vga_row);
+}
+
 void vga_write(char *s) {
   unsigned long len = strlen(s);
   unsigned long i;

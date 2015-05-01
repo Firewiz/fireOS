@@ -18,8 +18,10 @@ void kernel_main() {
   vga_write(" version " VERSION " initialized\n");
   init_keyboard();
   vga_write("Keyboard initialized\n");
+  asm volatile ("sti");
   while(1) {
     char c = getc();
     vga_putchar(c);
+    vga_updatepos();
   }
 }
