@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "fat.h"
 #include "printf.h"
+#include "malloc.h"
 
 void kernel_main() {
   setup_idt();
