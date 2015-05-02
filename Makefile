@@ -18,4 +18,4 @@ $(PROG):$(OBJS) $(HDRS)
 	objcopy --only-keep-debug fireos.bin fireos.sym
 	objcopy --strip-debug fireos.bin
 clean:
-	rm -f *.o $(PROG) version.h *~
+	rm -f *.o $(PROG) fireos.sym version.h *~

@@ -42,3 +42,6 @@ gcc-cross/
 
 # Auto-generated headers
 version.h
+
+disk.img
+fs_mount/
