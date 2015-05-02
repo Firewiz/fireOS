@@ -31,5 +31,6 @@ void vga_addch(char, unsigned char, unsigned char, unsigned char);
 void vga_scroll();
 void vga_putchar(char);
 void vga_write(char *);
+void vga_updatepos();
 
 #endif
