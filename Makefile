@@ -6,7 +6,7 @@ CFLAGS=-ffreestanding -nostdlib -Wall -Wextra -g
 ASFLAGS=-felf32 -F stabs -g
 
 HDRS=vga.h stdlib.h asmintr.h idt.h
-OBJS=kernel.o vga.o stdlib.o asmintr.o boot.o idt_s.o idt_c.o inthandle.o irq.o keyboard.o disk.o
+OBJS=kernel.o vga.o stdlib.o asmintr.o boot.o idt_s.o idt_c.o inthandle.o irq.o keyboard.o disk.o fat.o
 PROG=fireos.bin
 
 all:version.h $(PROG)

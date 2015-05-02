@@ -21,26 +21,4 @@ void kernel_main() {
   init_keyboard();
   vga_write("Keyboard initialized\n");
   asm volatile ("sti");
-  vga_write("Attempting sector read, hold on to your hats...\n");
-  unsigned char sector[512];
-  read_sector((unsigned short *)sector, 0, 0);
-  vga_write("Let's see what we got...\n");
-  int i;
-  for(i = 0; i < 512; i++) {
-    vga_putchar(sector[i]);
-  }
-  sector[0] = 'A';
-  sector[1] = 'B';
-  sector[2] = 'C';
-  vga_write("\n\nAttempting sector write...\n");
-  write_sector((unsigned short *)sector, 0, 0);
-  vga_write("Write complete.\n");
-  reset_bus();
-  vga_write("Attempting sector read, hold on to your hats...\n");
-  read_sector((unsigned short *)sector, 0, 0);
-  vga_write("Let's see what we got...\n");
-  for(i = 0; i < 512; i++) {
-    vga_putchar(sector[i]);
-  }
-  vga_write("\n\nTest complete.\n");
 }
