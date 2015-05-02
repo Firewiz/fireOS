@@ -45,7 +45,11 @@ void vga_putchar(char c) {
     vga_col = 0;
     break;
   case '\b':
-    vga_col = (vga_col = 0) ? 0 : vga_col - 1;
+    vga_col = (vga_col == 0) ? 0 : vga_col - 1;
+    vga_putchar(' ');
+    vga_col = (vga_col == 0) ? 0 : vga_col - 1;
+    break;
+  case 0:
     break;
   default:
     vga_addch(c, vga_color, vga_col++, vga_row);

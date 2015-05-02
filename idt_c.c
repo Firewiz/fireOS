@@ -1,4 +1,5 @@
 #include "idt.h"
+#include "vga.h"
 
 void (*int_handlers[256])(int no);
 
