@@ -36,6 +36,21 @@ struct fat_fs {
   unsigned int total_clusters;
 };
 
+struct fat_dirent {
+  char filename[11];
+  unsigned char attrs;
+  unsigned char res;
+  unsigned char ctime_tenths;
+  unsigned short ctime_hms;
+  unsigned short ctime_ymd;
+  unsigned short atime_ymd;
+  unsigned short cluster_high;
+  unsigned short mtime_hms;
+  unsigned short mtime_ymd;
+  unsigned short cluster_low;
+  unsigned int size;
+} __attribute__ ((packed));
+
 void read_fs(struct fat_fs *);
 
 #endif

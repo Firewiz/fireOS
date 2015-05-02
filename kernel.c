@@ -29,9 +29,10 @@ void kernel_main() {
   printf("File system info:\n");
   printf("\tTotal sectors: %d\n", filesys.total_sectors);
   printf("\tFAT size: %d\n", filesys.fat_size);
-  printf("\tRoot dir size :%d\n", filesys.root_size);
+  printf("\tRoot dir size: %d\n", filesys.root_size);
   printf("\tFirst data sector: %d\n", filesys.first_data);
   printf("\tFirst FAT sector: %d\n", filesys.first_fat);
   printf("\tTotal data size: %d\n", filesys.total_data);
   printf("\tTotal clusters: %d\n", filesys.total_clusters);
+  printf("\tCluster size (bytes): %d\n", filesys.bpb.bps);
 }
