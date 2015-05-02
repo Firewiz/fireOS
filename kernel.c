@@ -1,9 +1,5 @@
 #include "version.h"
 #include "vga.h"
-<<<<<<< HEAD
-
-void kernel_main() {
-=======
 #include "idt.h"
 #include "inthandle.h"
 #include "keyboard.h"
@@ -14,7 +10,6 @@ void kernel_main() {
   setup_idt();
   install_exc_handlers();
   init_irq();
->>>>>>> dev
   vga_init();
   vga_write("Welcome to ");
   vga_setcolor(vga_color(COLOR_RED, COLOR_BLACK));
@@ -22,9 +17,6 @@ void kernel_main() {
   vga_setcolor(vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK));
   vga_write("OS");
   vga_setcolor(vga_color(COLOR_LIGHT_GREY, COLOR_BLACK));
-<<<<<<< HEAD
-  vga_write(" version " VERSION " initialized\n");
-=======
   vga_write(" version " VERSION "\n");
   init_keyboard();
   vga_write("Keyboard initialized\n");
@@ -51,5 +43,4 @@ void kernel_main() {
     vga_putchar(sector[i]);
   }
   vga_write("\n\nTest complete.\n");
->>>>>>> dev
 }
