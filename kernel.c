@@ -4,7 +4,8 @@
 #include "inthandle.h"
 #include "keyboard.h"
 #include "irq.h"
-#include "disk.h"
+#include "fat.h"
+#include "printf.h"
 
 void kernel_main() {
   setup_idt();
@@ -21,4 +22,16 @@ void kernel_main() {
   init_keyboard();
   vga_write("Keyboard initialized\n");
   asm volatile ("sti");
+  struct fat_fs filesys;
+  vga_write("Reading file system\n");
+  read_fs(&filesys);
+  printf("Read FAT16 filesystem, label %s\n", filesys.bpb.ebr.label);
+  printf("File system info:\n");
+  printf("\tTotal sectors: %d\n", filesys.total_sectors);
+  printf("\tFAT size: %d\n", filesys.fat_size);
+  printf("\tRoot dir size :%d\n", filesys.root_size);
+  printf("\tFirst data sector: %d\n", filesys.first_data);
+  printf("\tFirst FAT sector: %d\n", filesys.first_fat);
+  printf("\tTotal data size: %d\n", filesys.total_data);
+  printf("\tTotal clusters: %d\n", filesys.total_clusters);
 }

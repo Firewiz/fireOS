@@ -36,5 +36,6 @@ struct fat_fs {
   unsigned int total_clusters;
 };
 
+void read_fs(struct fat_fs *);
 
 #endif
