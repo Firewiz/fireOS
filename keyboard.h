@@ -35,5 +35,6 @@ EXTERN volatile int kb_write, kb_read, kb_state;
 void init_keyboard();
 unsigned char getkey();
 unsigned char getc();
+void getline(char *);
 
 #endif

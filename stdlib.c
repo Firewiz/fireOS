@@ -17,8 +17,7 @@ void reverse(char s[])
   }
 }
 
-void itoa(int n, char s[])
-{
+void itoa(int n, char s[]) {
   int i, sign;
   if ((sign = n) < 0)
     n = -n;
@@ -30,4 +29,15 @@ void itoa(int n, char s[])
     s[i++] = '-';
   s[i] = '\0';
   reverse(s); 
+}
+
+int atoi(char *str) {
+    int r = 0;
+    int i;
+    for (i = 0; str[i] != '\0'; i++) {
+      if(!isdigit(str[i])) continue;
+      r *= 10;
+      r += str[i] - '0';
+    }
+    return r;
 }

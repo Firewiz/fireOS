@@ -33,6 +33,10 @@ void vga_scroll() {
       vga_buf[(y - 1) * VGA_WIDTH + x] = vga_buf[y * VGA_WIDTH + x];
     }
   }
+  for(x = 0; x < VGA_WIDTH; x++) {
+    vga_buf[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = 0;
+  }
+  vga_updatepos();
 }
 
 void vga_putchar(char c) {
@@ -60,7 +64,7 @@ void vga_putchar(char c) {
     vga_row++;
   }
   if(vga_row >= VGA_HEIGHT) {
-    vga_row = VGA_HEIGHT - 1;
+    vga_row--;
     vga_scroll();
   }
 }

@@ -3,6 +3,7 @@
 #undef EXTERN
 #include "irq.h"
 #include "asmintr.h"
+#include "vga.h"
 
 unsigned char kb_buffer[32];
 volatile int kb_write, kb_read, kb_state = 0;
@@ -64,6 +65,18 @@ unsigned char getc() {
     }
   } while(c & 0x80 || key & 0x80);
   return c;
+}
+
+void getline(char *line) {
+  char c;
+  while(1) {
+    c = getc();
+    vga_putchar(c);
+    vga_updatepos();
+    *line = c;
+    line++;
+    if(c == '\n') break;
+  }
 }
 
 void init_keyboard() {
