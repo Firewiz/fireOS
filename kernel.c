@@ -7,6 +7,8 @@
 #include "fat.h"
 #include "printf.h"
 #include "malloc.h"
+#include "stdlib.h"
+#include "disk.h"
 
 void kernel_main() {
   setup_idt();
@@ -36,4 +38,36 @@ void kernel_main() {
   printf("\tTotal data size: %d\n", filesys.total_data);
   printf("\tTotal clusters: %d\n", filesys.total_clusters);
   printf("\tCluster size (bytes): %d\n", filesys.bpb.bps);
+  printf("\tReserved sectors: %d\n", filesys.bpb.n_hidden);
+  printf("\tRoot directory entries: %d\n", filesys.bpb.n_dirents);
+  printf("Reading root directory...\n");
+  struct fat_dirent *rdir = read_root_directory(&filesys);
+  unsigned int i;
+  char name[9], ext[4];
+  char line[80];
+  int selection;
+  printf("INDEX\tNAME\t TYPE\tSIZE\tLOCATION\n");
+  for(i = 0; i < filesys.bpb.n_dirents; i++) {
+    if(rdir[i].filename[0] == 0) break;
+    if(rdir[i].filename[0] == -0x65) continue;
+    if(rdir[i].attrs == 0x0F) continue;
+    parse_filename(rdir[i].filename, name, ext);
+    printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size, rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
+  }
+  printf("Show file: ");
+  getline(line);
+  selection = atoi(line);
+  parse_filename(rdir[selection].filename, name, ext);
+  printf("Reading file %d (%s.%s)...\n", selection, name, ext);
+  unsigned int n_file_sectors = rdir[selection].size;
+  n_file_sectors |= 0x1FF;
+  n_file_sectors++;
+  n_file_sectors /= 512;
+  unsigned char *file = malloc(n_file_sectors * 512);
+  int base_sector = rdir[selection].cluster_low * filesys.bpb.spc + filesys.first_data - 7;
+  for(i = 0; i < n_file_sectors; i++) {
+    read_sector(file + (i * 512), 0, base_sector + i);
+  }
+  printf("%s\n", file);
+  free(rdir);
 }

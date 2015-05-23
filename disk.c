@@ -1,7 +1,8 @@
 #include "disk.h"
 #include "asmintr.h"
 
-int read_sector(unsigned short *sector, unsigned char drive, unsigned int lba) {
+int read_sector(unsigned char *sector, unsigned char drive, unsigned int lba) {
+  unsigned short *s = (unsigned short *) sector;
   outb(0x1F6, 0xE0 | (drive << 4) | ((lba >> 24) & 0x0F));
   outb(0x1F1, 0);
   outb(0x1F2, 1);
@@ -17,12 +18,13 @@ int read_sector(unsigned short *sector, unsigned char drive, unsigned int lba) {
   }
   int i;
   for(i = 0; i < 256; i++) {
-    sector[i] = inw(0x1F0);
+    s[i] = inw(0x1F0);
   }
   return 0;
 }
 
-int write_sector(unsigned short *sector, unsigned char drive, unsigned int lba) {
+int write_sector(unsigned char *sector, unsigned char drive, unsigned int lba) {
+  unsigned short *s = (unsigned short *) sector;
   outb(0x1F6, 0xE0 | (drive << 4) | ((lba >> 24) & 0x0F));
   outb(0x1F2, 1);
   outb(0x1F3, lba & 0xFF);
@@ -37,7 +39,7 @@ int write_sector(unsigned short *sector, unsigned char drive, unsigned int lba) 
   }
   int i;
   for(i = 0; i < 256; i++) {
-    outw(0x1F0, sector[i]);
+    outw(0x1F0, s[i]);
   }
   outb(0x1F7, 0xE7);
   return 0;

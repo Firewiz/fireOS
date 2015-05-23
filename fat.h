@@ -13,9 +13,10 @@ struct fat_fs {
     unsigned short n_sectors;
     unsigned char mdt;
     unsigned short spf;
+    unsigned short spt;
     unsigned short n_heads;
     unsigned int n_hidden;
-    unsigned short l_sectors;
+    unsigned int l_sectors;
     struct fat_ebr {
       unsigned char dnum;
       unsigned char flags;
@@ -52,5 +53,7 @@ struct fat_dirent {
 } __attribute__ ((packed));
 
 void read_fs(struct fat_fs *);
-
+struct fat_dirent *read_root_directory(struct fat_fs *);
+void parse_filename(char fname[11], char name[8], char ext[3]);
+unsigned int sector_from_fat(struct fat_fs *, unsigned short offset);
 #endif
