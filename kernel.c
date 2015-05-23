@@ -54,7 +54,7 @@ void kernel_main() {
     parse_filename(rdir[i].filename, name, ext);
     printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size, rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
   }
-  printf("Show file: ");
+  printf("Load module: ");
   getline(line);
   selection = atoi(line);
   parse_filename(rdir[selection].filename, name, ext);
