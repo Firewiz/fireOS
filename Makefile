@@ -19,6 +19,7 @@ $(PROG):$(OBJS) $(HDRS)
 	objcopy --strip-debug fireos.bin
 clean:
 	rm -f *.o $(PROG) fireos.sym version.h *~
+	cd modules ; make clean
 modules: build_modules install_modules
 build_modules:
 	cd modules ; make
