@@ -9,12 +9,27 @@
 #include "malloc.h"
 #include "stdlib.h"
 #include "disk.h"
+#include "syscall.h"
+#include "paging.h"
 
 void kernel_main() {
+  vga_init();
+  setup_paging();
+  unsigned int i;
+  vga_write("Identity paging to 0x400000\n");
+  for(i = 0; i < 0x400; i++) {
+    identity_page(i);
+  }
+  vga_write("Non-identity paging 0x1000000 to 0x2000000\n");
+  for(i = 0x1000; i < 0x2000; i++) {
+    nonidentity_page(i);
+  }
+  load_pagetable();
+  vga_write("Done!\n");
   setup_idt();
   install_exc_handlers();
   init_irq();
-  vga_init();
+  register_syscall(0x80);
   vga_write("Welcome to ");
   vga_setcolor(vga_color(COLOR_RED, COLOR_BLACK));
   vga_write("Fire");
@@ -42,7 +57,6 @@ void kernel_main() {
   printf("\tRoot directory entries: %d\n", filesys.bpb.n_dirents);
   printf("Reading root directory...\n");
   struct fat_dirent *rdir = read_root_directory(&filesys);
-  unsigned int i;
   char name[9], ext[4];
   char line[80];
   int selection;
@@ -68,6 +82,9 @@ void kernel_main() {
   for(i = 0; i < n_file_sectors; i++) {
     read_sector(file + (i * 512), 0, base_sector + i);
   }
-  printf("%s\n", file);
+  char *module = (char *)0x1000000;
+  for(i = 0; i < n_file_sectors * 512; i++)
+    module[i] = file[i];
+  ((void (*)()) module)();
   free(rdir);
 }

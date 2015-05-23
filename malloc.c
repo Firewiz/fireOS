@@ -1,13 +1,23 @@
 #include "malloc.h"
+#include "paging.h"
 
-unsigned char *malloc_arena = (unsigned char *)0x80000;
+unsigned char *malloc_arena = (unsigned char *)0x800000;
 
 void *malloc(unsigned int size) {
   struct malloc_header *headptr = (struct malloc_header *) malloc_arena;
   while(1) {
-    if(!(headptr->flags & FLAG_ALLOCATED)) { /* end of arena */
+    if(!is_present((int) headptr / 0x1000)) {
+      nonidentity_page((int) headptr / 0x1000);
+    }
+    if(!(headptr->flags & FLAG_ALLOCATED) || headptr->magic != MALLOC_MAGIC) { /* end of arena */
       headptr->flags = FLAG_ALLOCATED | FLAG_INUSE;
       headptr->length = size;
+      unsigned int i;
+      for(i = 0; i < size; i+=4096) {
+	if(!is_present(i + ((int) headptr / 0x1000))) {
+	  nonidentity_page(i + ((int) headptr / 0x1000));
+	}
+      }
       return headptr + 1;
     } else if(!(headptr->flags & FLAG_INUSE)) { /* possible fit */
       if(headptr->length >= size) {	 /* definite fit */
@@ -16,16 +26,24 @@ void *malloc(unsigned int size) {
 	  struct malloc_header *newhead = headptr + (size + sizeof(struct malloc_header)) / sizeof(struct malloc_header);
 	  newhead->length = headptr->length - size - sizeof(struct malloc_header);
 	  newhead->flags = FLAG_ALLOCATED;
+	  newhead->magic = MALLOC_MAGIC;
 	  headptr->length = size;
 	}
 	headptr->flags |= FLAG_INUSE;
+	unsigned int i;
+	for(i = 0; i < size; i+=4096) {
+	  if(!is_present(i + ((int) headptr / 0x1000))) {
+	    nonidentity_page(i + ((int) headptr / 0x1000));
+	  }
+	}
 	return headptr + 1;
       } else {
-	headptr += headptr->length;
+	headptr += headptr->length / sizeof(struct malloc_header);
 	headptr += 1;
       }
     } else {			/* next headptr */
-      headptr += (headptr->length + sizeof(struct malloc_header)) / sizeof(struct malloc_header);
+      headptr += headptr->length / sizeof(struct malloc_header);
+      headptr += 1;
     }
   }
 }
