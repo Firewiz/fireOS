@@ -63,7 +63,7 @@ void kernel_main() {
   printf("INDEX\tNAME\t TYPE\tSIZE\tLOCATION\n");
   for(i = 0; i < filesys.bpb.n_dirents; i++) {
     if(rdir[i].filename[0] == 0) break;
-    if(rdir[i].filename[0] == -0x65) continue;
+    if(rdir[i].filename[0] == (signed char) 0xE5) continue;
     if(rdir[i].attrs == 0x0F) continue;
     parse_filename(rdir[i].filename, name, ext);
     printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size, rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
