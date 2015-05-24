@@ -11,6 +11,30 @@
 #include "disk.h"
 #include "syscall.h"
 #include "paging.h"
+#include "mt.h"
+#include "timer.h"
+
+void mt_test() {
+  vga_write("MT test thread 1 initialized\n");
+  int i;
+  static volatile char mc = 33;
+  while(1) {
+    for(i = 0; i < 10000000; i++) ;
+    vga_addch(mc++, vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK), 40, 0);
+    if(mc >= 127) mc = 33;
+  }
+}
+
+void mt_2() {
+  vga_write("MT test thread 2 initialized\n");
+  int i;
+  static volatile char mc = 33;
+  while(1) {
+    for(i = 0; i < 10000000; i++) ;
+    vga_addch(mc++, vga_color(COLOR_LIGHT_GREEN, COLOR_BLACK), 41, 0);
+    if(mc >= 127) mc = 33;
+  }
+}
 
 void kernel_main() {
   vga_init();
@@ -39,22 +63,20 @@ void kernel_main() {
   vga_write(" version " VERSION "\n");
   init_keyboard();
   vga_write("Keyboard initialized\n");
+  timer_phase(100);
+  init_mt();
+
+  vga_write("Setting MT entry point.\n");
+  taskid_t test_id = start_task(mt_test);
+  taskid_t test2_id= start_task(mt_2);
+  vga_write("Attempting to start MT.\nThis will probably fail.\n");
   asm volatile ("sti");
+  
+  /*
   struct fat_fs filesys;
   vga_write("Reading file system\n");
   read_fs(&filesys);
   printf("Read FAT16 filesystem, label %s\n", filesys.bpb.ebr.label);
-  printf("File system info:\n");
-  printf("\tTotal sectors: %d\n", filesys.total_sectors);
-  printf("\tFAT size: %d\n", filesys.fat_size);
-  printf("\tRoot dir size: %d\n", filesys.root_size);
-  printf("\tFirst data sector: %d\n", filesys.first_data);
-  printf("\tFirst FAT sector: %d\n", filesys.first_fat);
-  printf("\tTotal data size: %d\n", filesys.total_data);
-  printf("\tTotal clusters: %d\n", filesys.total_clusters);
-  printf("\tCluster size (bytes): %d\n", filesys.bpb.bps);
-  printf("\tReserved sectors: %d\n", filesys.bpb.n_hidden);
-  printf("\tRoot directory entries: %d\n", filesys.bpb.n_dirents);
   printf("Reading root directory...\n");
   struct fat_dirent *rdir = read_root_directory(&filesys);
   char name[9], ext[4];
@@ -86,5 +108,5 @@ void kernel_main() {
   for(i = 0; i < n_file_sectors * 512; i++)
     module[i] = file[i];
   ((void (*)()) module)();
-  free(rdir);
+  free(rdir); */
 }

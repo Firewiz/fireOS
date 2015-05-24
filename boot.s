@@ -28,7 +28,6 @@ _start:
                                 ; somewhere useful
 extern kernel_main
 	call kernel_main	; main C entry point
-	cli
 .hang:
 	hlt
 	jmp .hang

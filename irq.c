@@ -2,13 +2,13 @@
 #include "idt.h"
 #include "asmintr.h"
 
-void (*irq_handlers[16])(int irq);
+void (*irq_handlers[16])(int irq, struct regs *r);
 
-void irq_common_handler(int inum) {
+void irq_common_handler(int inum, struct regs *r) {
   if(irq_handlers[inum - 32]) {
-    irq_handlers[inum - 32](inum - 32);
+    irq_handlers[inum - 32](inum - 32, r);
   }
-  if(inum > 40)
+  if(inum >= 40)
     outb(0xA0, 0x20);
   outb(0x20, 0x20);
 }

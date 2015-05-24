@@ -10,6 +10,7 @@ void *malloc(unsigned int size) {
       nonidentity_page((int) headptr / 0x1000);
     }
     if(!(headptr->flags & FLAG_ALLOCATED) || headptr->magic != MALLOC_MAGIC) { /* end of arena */
+      headptr->magic = MALLOC_MAGIC;
       headptr->flags = FLAG_ALLOCATED | FLAG_INUSE;
       headptr->length = size;
       unsigned int i;

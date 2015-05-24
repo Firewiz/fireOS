@@ -3,6 +3,6 @@
 #include "idt.h"
 
 void init_irq();
-void irq_common_handler(int inum);
+void irq_common_handler(int inum, struct regs *r);
 void install_irq(void *handler, int gate);
 #endif

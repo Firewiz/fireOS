@@ -4,7 +4,7 @@
 
 unsigned char vga_row, vga_col;
 unsigned char vga_color;
-unsigned short *vga_buf;
+volatile unsigned short *vga_buf;
 
 void vga_init() {
   vga_row = vga_col = 0;

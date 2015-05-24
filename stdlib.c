@@ -41,3 +41,17 @@ int atoi(char *str) {
     }
     return r;
 }
+
+void memcpy(void *dest, const void *src, unsigned int n) {
+  unsigned int i;
+  for(i = 0; i < n; i++) {
+    ((char *) dest)[i] = ((const char *) src)[i];
+  }
+}
+
+void bzero(void *mem, unsigned int n) {
+  unsigned int i;
+  for(i = 0; i < n; i++) {
+    ((char *) mem)[i] = 0;
+  }
+}
