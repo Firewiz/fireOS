@@ -7,7 +7,8 @@ unsigned char vga_color;
 volatile unsigned short *vga_buf;
 
 void vga_init() {
-  vga_row = vga_col = 0;
+  vga_row = 1;
+  vga_col = 0;
   vga_color = vga_color(COLOR_LIGHT_GREY, COLOR_BLACK);
   vga_buf = (unsigned short *) 0xB8000;
   unsigned char x, y;
@@ -28,7 +29,7 @@ void vga_addch(char c, unsigned char color, unsigned char x, unsigned char y) {
 
 void vga_scroll() {
   int x, y;
-  for(y = 0; y < VGA_HEIGHT; y++) {
+  for(y = 2; y < VGA_HEIGHT; y++) {
     for(x = 0; x < VGA_WIDTH; x++) {
       vga_buf[(y - 1) * VGA_WIDTH + x] = vga_buf[y * VGA_WIDTH + x];
     }

@@ -55,6 +55,7 @@ isr_common_stub:
 	push es
 	push fs
 	push gs
+	push 0 ; load_stack bit
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
@@ -65,6 +66,12 @@ isr_common_stub:
 	mov eax, int_handler
 	call eax
 	pop eax
+
+	pop eax
+	test eax, eax
+	jne iret_load_stack
+cleanup:
+	
 	pop gs
 	pop fs
 	pop es
@@ -72,6 +79,61 @@ isr_common_stub:
 	popa
 	add esp, 8
 	iret
+
+iret_load_stack:
+;; Current stack: 0 gs 4 fs 8 es 12 ds 16 edi 20 esi 24 ebp 28 esp 32
+;; ebx 36 edx 40 ecx 44 eax 48 in 52 ec 56 eip 60 cs 64 eflags 68
+;; useresp 72 ss
+
+;; We need to move that stack to useresp.
+	mov eax, [esp+68]
+;; Now that useresp is in EAX, we can move the rest of the registers
+;; over.
+	pop ebx
+	mov [eax-72], ebx ; gs
+	pop ebx
+	mov [eax-68], ebx ; fs
+	pop ebx
+	mov [eax-64], ebx ; es
+	pop ebx
+	mov [eax-60], ebx ; ds
+	pop ebx
+	mov [eax-56], ebx ; edi
+	pop ebx
+	mov [eax-52], ebx ; esi
+	pop ebx
+	mov [eax-48], ebx ; ebp
+	pop ebx
+	mov [eax-44], ebx ; esp
+	pop ebx
+	mov [eax-40], ebx ; ebx
+	pop ebx
+	mov [eax-36], ebx ; edx
+	pop ebx
+	mov [eax-32], ebx ; ecx
+	pop ebx
+	mov [eax-28], ebx ; eax
+	pop ebx
+	mov [eax-24], ebx ; inum
+	pop ebx
+	mov [eax-20], ebx ; errcode
+	pop ebx
+	mov [eax-16], ebx ; eip
+	pop ebx
+	mov [eax-12], ebx ; cs
+	pop ebx
+	mov [eax-8], ebx ; eflags
+	pop ebx
+	mov [eax-4], ebx ; useresp
+	pop ebx
+	mov [eax], ebx ; ss
+
+; load new stack
+	sub eax, 72
+	mov esp, eax
+	jmp cleanup
+	
+	
 	
 global idt
 idt:

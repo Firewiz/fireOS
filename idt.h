@@ -19,15 +19,17 @@ struct idt_desc {
 } __attribute__((packed));
 
 struct regs {
-  unsigned int gs, fs, es, ds;
-  unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
-  unsigned int int_no, err_code;
-  unsigned int eip, cs, eflags, useresp, ss;
+  unsigned int load_stack;
+  unsigned int gs, fs, es, ds; // pushed manually
+  unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // pushed by pusha
+  unsigned int int_no, err_code; // pushed by ISR
+  unsigned int eip, cs, eflags, useresp, ss; // pushed by CPU, popped by iret
 } __attribute__((packed));
 
 void int_handler(struct regs *r);
 
 extern struct idt_gate idt[256];
 extern struct idt_desc idtp;
+
 
 #endif

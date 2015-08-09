@@ -17,10 +17,14 @@
 void mt_test() {
   vga_write("MT test thread 1 initialized\n");
   int i;
+  int esp = 10;
+  asm volatile ("mov %%esp, %0" : "=r" (esp));
+  printf("%x stack %x (%x %x)\n", &i, esp, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->esp);
   static volatile char mc = 33;
   while(1) {
-    for(i = 0; i < 10000000; i++) ;
-    vga_addch(mc++, vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK), 40, 0);
+    vga_addch(mc++, vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK), 0, 0);
+    delay(50);
+    printf("%x stack %x (%x %x)\n", &i, esp, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->esp);
     if(mc >= 127) mc = 33;
   }
 }
@@ -30,11 +34,34 @@ void mt_2() {
   int i;
   static volatile char mc = 33;
   while(1) {
-    for(i = 0; i < 10000000; i++) ;
-    vga_addch(mc++, vga_color(COLOR_LIGHT_GREEN, COLOR_BLACK), 41, 0);
+    vga_addch(mc++, vga_color(COLOR_LIGHT_GREEN, COLOR_BLACK), 1, 0);
+    delay(50);
     if(mc >= 127) mc = 33;
   }
 }
+
+void mt_3() {
+  vga_write("MT test thread 3 initialized\n");
+  int i;
+  static volatile char mc = 33;
+  while(1) {
+    vga_addch(mc++, vga_color(COLOR_LIGHT_RED, COLOR_BLACK), 2, 0);
+    delay(50);
+    if(mc >= 127) mc = 33;
+  }
+}
+
+void mt_4() {
+  vga_write("MT test thread 4 initialized\n");
+  int i;
+  static volatile char mc = 33;
+  while(1) {
+    vga_addch(mc++, vga_color(COLOR_LIGHT_BLUE, COLOR_BLACK), 3, 0);
+    delay(50);
+    if(mc >= 127) mc = 33;
+  }
+}
+
 
 void kernel_main() {
   vga_init();
@@ -44,8 +71,8 @@ void kernel_main() {
   for(i = 0; i < 0x400; i++) {
     identity_page(i);
   }
-  vga_write("Non-identity paging 0x1000000 to 0x2000000\n");
-  for(i = 0x1000; i < 0x2000; i++) {
+  vga_write("Non-identity paging 0x1000000 to 0x1800000\n");
+  for(i = 0x1000; i < 0x1800; i++) {
     nonidentity_page(i);
   }
   load_pagetable();
@@ -65,11 +92,14 @@ void kernel_main() {
   vga_write("Keyboard initialized\n");
   timer_phase(100);
   init_mt();
+  init_timer();
 
   vga_write("Setting MT entry point.\n");
   taskid_t test_id = start_task(mt_test);
   taskid_t test2_id= start_task(mt_2);
-  vga_write("Attempting to start MT.\nThis will probably fail.\n");
+  taskid_t test3_id= start_task(mt_3);
+  taskid_t test4_id= start_task(mt_4);
+  vga_write("Starting MT.\n");
   asm volatile ("sti");
   
   /*

@@ -1,9 +1,12 @@
 #include "malloc.h"
 #include "paging.h"
 
-unsigned char *malloc_arena = (unsigned char *)0x800000;
+unsigned char *malloc_arena = (unsigned char *)0x1800000;
 
 void *malloc(unsigned int size) {
+  return malloc_ap(size, 0, 0);
+}
+void *malloc_ap(unsigned int size, int align, void *phy) {
   struct malloc_header *headptr = (struct malloc_header *) malloc_arena;
   while(1) {
     if(!is_present((int) headptr / 0x1000)) {

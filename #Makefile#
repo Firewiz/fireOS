@@ -14,7 +14,7 @@ version.h:
 	chmod +x mkver
 	./mkver
 $(PROG):$(OBJS) $(HDRS)
-	$(CC) -T linker.ld -o $(PROG) -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
+	$(CC) -T linker.ld -o $(PROG) -ffreestanding -O2 -nostdlib $(OBJS) -lgc
 	objcopy --only-keep-debug fireos.bin fireos.sym
 	objcopy --strip-debug fireos.bin
 clean:

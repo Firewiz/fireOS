@@ -12,6 +12,7 @@ struct malloc_header {
 #define MALLOC_MAGIC 0xCAFEBABE
 
 void *malloc(unsigned int);
+void *malloc_ap(unsigned int, int, void *);
 void free(void *);
 
 #endif
