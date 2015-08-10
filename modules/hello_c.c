@@ -2,6 +2,6 @@
 #include <stdlib.h>
 
 int main(void) {
-  printf("Hello, World %d!\n", 7);
+  printf("Hello, World!\n");
   exit(0);
 }

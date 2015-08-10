@@ -22,6 +22,7 @@ void handle_syscall(int no, struct regs *r) {
       }
       vga_updatepos();
     }
+    r->eax = count;
     break;
   }
 }

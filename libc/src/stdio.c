@@ -3,16 +3,17 @@
 #include "../include/syscall.h"
 
 int putchar(int c) {
-  sys_write(1, (char *) &c, 1);
+  return sys_write(1, (char *) &c, 1);
 }
 
 int puts(const char *str) {
-  sys_write(1, str, strlen(str));
-  putchar('\n');
+  int total = sys_write(1, str, strlen(str));
+  total += putchar('\n');
+  return total;
 }
 
 int _putstr(const char *str) {
-  sys_write(1, str, strlen(str));
+  return sys_write(1, str, strlen(str));
 }
 
 const char *hex = "0123456789ABCDEF";
@@ -47,6 +48,7 @@ int printf(const char *fmt, ...) {
   __builtin_va_list vl;
   __builtin_va_start(vl, fmt);
   char c;
+  char written = 0;
   char buf[32];
   unsigned int va, i;
   while((c = *(fmt++)) != 0) {
@@ -54,24 +56,25 @@ int printf(const char *fmt, ...) {
       c = *(fmt++);
       switch(c) {
       case 'c':
-	putchar(__builtin_va_arg(vl, int));
+	written += putchar(__builtin_va_arg(vl, int));
 	break;
       case 's':
-	_putstr(__builtin_va_arg(vl, char *));
+	written += _putstr(__builtin_va_arg(vl, char *));
 	break;
       case 'd':
 	_itoa(__builtin_va_arg(vl, int), buf);
-	_putstr(buf);
+	written += _putstr(buf);
 	break;
       case 'x':
 	va = __builtin_va_arg(vl, unsigned int);
 	for(i = 0; i < 8; i++) {
-	  putchar(hex[(va >> ((7-i) * 4)) & 0xF]);
+	  written += putchar(hex[(va >> ((7-i) * 4)) & 0xF]);
 	}
       }
     } else {
-      putchar(c);
+      written += putchar(c);
     }
   }
   __builtin_va_end(vl);
+  return written;
 }

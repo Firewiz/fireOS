@@ -7,6 +7,7 @@
 #include "stdlib.h"
 #include "keyboard.h"
 #include "elf.h"
+#include "mt.h"
 
 void shell_main() {
   struct fat_fs filesys;
@@ -18,15 +19,16 @@ void shell_main() {
   char name[9], ext[4];
   char line[80];
   unsigned int selection, i;
-  printf("INDEX\tNAME\t TYPE\tSIZE\tLOCATION\n");
+  printf("Index\tName\t Type\tSize\tLocation\n");
   for(i = 0; i < filesys.bpb.n_dirents; i++) {
     if(rdir[i].filename[0] == 0) break;
     if(rdir[i].filename[0] == (signed char) 0xE5) continue;
     if(rdir[i].attrs == 0x0F) continue;
     parse_filename(rdir[i].filename, name, ext);
-    printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size, rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
+    printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size,
+	   rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
   }
-  printf("Load module: ");
+  printf("Load program: ");
   getline(line);
   selection = atoi(line);
   parse_filename(rdir[selection].filename, name, ext);
@@ -43,5 +45,6 @@ void shell_main() {
   printf("File read.\nLoading ELF file...\n");
   start_task(load_elf(file), 1);
   free(rdir);
+  yield();
 }
 

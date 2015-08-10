@@ -25,6 +25,7 @@ void init_mt();
 taskid_t start_task(void (*entry)(), int user);
 void end_task(taskid_t id);
 void next_ctx(int no, struct regs *r);
+void yield();
 
 #define TASK_STACK_SIZE 0x10000
 #define SYSCALL_STACK_SIZE 0x10000
