@@ -32,5 +32,6 @@ void vga_scroll();
 void vga_putchar(char);
 void vga_write(char *);
 void vga_updatepos();
+void vga_setcurs(char, char);
 
 #endif

@@ -1,7 +1,7 @@
 #include "malloc.h"
 #include "paging.h"
 
-unsigned char *malloc_arena = (unsigned char *)0x1800000;
+unsigned char *malloc_arena = (unsigned char *)0x2000000;
 
 void *malloc(unsigned int size) {
   return malloc_ap(size, 0, 0);
@@ -31,6 +31,7 @@ void *malloc_ap(unsigned int size, int align, void *phy) {
   struct malloc_header *headptr = (struct malloc_header *) malloc_arena;
 
   while(1) {
+    //    printf("Checking block at %x\n", headptr);
     // First, check if we need to page the current header.
     if(!is_present(PHY_TO_PAGE(headptr))) {
       nonidentity_page(PHY_TO_PAGE(headptr));
@@ -39,26 +40,27 @@ void *malloc_ap(unsigned int size, int align, void *phy) {
     // header there.
     if(headptr->magic != MALLOC_MAGIC
        || !(headptr->flags & FLAG_ALLOCATED)) {
-      // We've reached the end of the arena. (or possibly a corrupt
-      // header, but that's SEP)
+      // We've reached the end of the arena.
       return alloc_new_header(headptr, size);
     } else {
       // This header exists.  If it's in use, we'll just go on to the
       // next one.
       if(headptr->flags & FLAG_INUSE) {
+	//	printf("Found existing block at %x (%x %d %x)\n", headptr, headptr->length, headptr->flags, headptr->magic);
 	// Typecast BS to force addition to work properly.
 	headptr = (struct malloc_header *) (((unsigned char *) headptr) + headptr->length + sizeof(struct malloc_header));
 	continue;
       }
       // Header is not in use, so let's see if it would fit our block.
-      if(headptr->length <= size + sizeof(struct malloc_header) * 2) {
+      if(headptr->length <= size + sizeof(struct malloc_header)) {
 	// Looks like it doesn't. Move on.
-	
+	//	printf("Found existing(1) block at %x (%x %d %x)\n", headptr, headptr->length, headptr->flags, headptr->magic);
 	// Typecast BS to force addition to work properly.
 	headptr = (struct malloc_header *) (((unsigned char *) headptr) + headptr->length + sizeof(struct malloc_header));
 	continue;
       }
       // Header is unused and fits our block, so let's allocate it! Not worrying about splitting blocks just yet.
+      headptr->flags = FLAG_INUSE | FLAG_ALLOCATED;
       return headptr + 1;
     }
   }

@@ -14,6 +14,9 @@ void printf(char *fmt, ...) {
     if(c == '%') {
       c = *(fmt++);
       switch(c) {
+      case 'c':
+	vga_putchar(__builtin_va_arg(vl, char));
+	break;
       case 's':
 	vga_write(__builtin_va_arg(vl, char *));
 	break;

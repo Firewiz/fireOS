@@ -78,6 +78,8 @@ cleanup:
 	pop ds
 	popa
 	add esp, 8
+	sti
+	or WORD [esp + 8], 0x200
 	iret
 
 iret_load_stack:
@@ -160,13 +162,13 @@ idt_set_gate:
 	mov edx, [esp + 8]	; gate number
 	imul edx, 8
 	add edx, idt
-	mov word [edx],ax
+	mov word [edx],ax	; low offset
 	add edx, 2
-	mov word [edx],0x0008
+	mov word [edx],0x0008	; selector
 	add edx, 2
-	mov byte [edx], 0x00
+	mov byte [edx], 0x00	; unused
 	add edx, 1
-	mov byte [edx], 0x8E
+	mov byte [edx], 0xEE	; type_attr
 	add edx, 1
 	shr eax, 16
 	mov [edx],ax

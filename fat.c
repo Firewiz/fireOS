@@ -20,7 +20,7 @@ void read_fs(struct fat_fs *b) {
 }
 
 struct fat_dirent *read_root_directory(struct fat_fs *b) {
-  struct fat_dirent *r = malloc(sizeof(struct fat_dirent) * b->bpb.n_dirents);
+  struct fat_dirent *r = malloc(b->root_size * 512);
   unsigned char *data = (unsigned char *) r;
   unsigned int sector = b->first_data - b->root_size + 1;
   unsigned int i;

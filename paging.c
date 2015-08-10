@@ -48,7 +48,7 @@ static unsigned int first_frame() {
 void setup_paging() {
   int i;
   for(i = 0; i < 0x1000; i++) {
-    pdir[i] = ((int) ptables + i) | 0x03;
+    pdir[i] = ((int) ptables + i) | 0x07;
   }
 }
 
@@ -65,7 +65,7 @@ void load_pagetable() {
 // mapped_page: page this virtual memory here
 
 void identity_page(unsigned int page_index) {
-  ptables[page_index] = page_index * 0x1000 | 0x03;
+  ptables[page_index] = page_index * 0x1000 | 0x07;
   set_frame(page_index);
 }
 
@@ -75,7 +75,7 @@ void nonidentity_page(unsigned int page_index) {
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr) {
-  ptables[page_index] = phy_addr * 0x1000 | 0x03;
+  ptables[page_index] = phy_addr * 0x1000 | 0x07;
   set_frame(phy_addr);
 }
 
