@@ -18,13 +18,10 @@ void mt_test() {
   vga_write("MT test thread 1 initialized\n");
   int i;
   int esp = 10;
-  asm volatile ("mov %%esp, %0" : "=r" (esp));
-  printf("%x stack %x (%x %x)\n", &i, esp, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->esp);
   static volatile char mc = 33;
   while(1) {
     vga_addch(mc++, vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK), 0, 0);
-    delay(50);
-    printf("%x stack %x (%x %x)\n", &i, esp, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->esp);
+    delay(45);
     if(mc >= 127) mc = 33;
   }
 }
@@ -35,7 +32,7 @@ void mt_2() {
   static volatile char mc = 33;
   while(1) {
     vga_addch(mc++, vga_color(COLOR_LIGHT_GREEN, COLOR_BLACK), 1, 0);
-    delay(50);
+    delay(45);
     if(mc >= 127) mc = 33;
   }
 }
@@ -46,7 +43,7 @@ void mt_3() {
   static volatile char mc = 33;
   while(1) {
     vga_addch(mc++, vga_color(COLOR_LIGHT_RED, COLOR_BLACK), 2, 0);
-    delay(50);
+    delay(45);
     if(mc >= 127) mc = 33;
   }
 }
@@ -57,7 +54,7 @@ void mt_4() {
   static volatile char mc = 33;
   while(1) {
     vga_addch(mc++, vga_color(COLOR_LIGHT_BLUE, COLOR_BLACK), 3, 0);
-    delay(50);
+    delay(45);
     if(mc >= 127) mc = 33;
   }
 }
@@ -67,8 +64,8 @@ void kernel_main() {
   vga_init();
   setup_paging();
   unsigned int i;
-  vga_write("Identity paging to 0x400000\n");
-  for(i = 0; i < 0x400; i++) {
+  vga_write("Identity paging to 0x1000000\n");
+  for(i = 0; i < 0x1000; i++) {
     identity_page(i);
   }
   vga_write("Non-identity paging 0x1000000 to 0x1800000\n");
@@ -91,9 +88,31 @@ void kernel_main() {
   init_keyboard();
   vga_write("Keyboard initialized\n");
   timer_phase(100);
-  init_mt();
   init_timer();
 
+#define TEST_MT
+
+#ifdef TEST_MALLOC
+  void *a1 = malloc(1);
+  void *a10 = malloc(10);
+  void *a100 = malloc(100);
+  printf("%x %x %x\n", a1, a10, a100);
+  free(a1);
+  void *a5 = malloc(5);
+  printf("%x\n", a5);
+  a1 = malloc(1);
+  printf("%x\n", a1);
+  free(a10);
+  free(a100);
+  free(a5);
+  a5 = malloc(5);
+  printf("%x\n", a5);
+#endif
+  
+
+  
+#ifdef TEST_MT
+  init_mt();
   vga_write("Setting MT entry point.\n");
   taskid_t test_id = start_task(mt_test);
   taskid_t test2_id= start_task(mt_2);
@@ -101,6 +120,7 @@ void kernel_main() {
   taskid_t test4_id= start_task(mt_4);
   vga_write("Starting MT.\n");
   asm volatile ("sti");
+#endif
   
   /*
   struct fat_fs filesys;

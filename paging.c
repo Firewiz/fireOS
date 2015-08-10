@@ -1,9 +1,9 @@
 #include "paging.h"
 
 unsigned int *pdir = (unsigned int *) 0x400000;
-unsigned int *ptables = (unsigned int *) 0x401000;
+unsigned int *ptables = (unsigned int *) 0x405000;
 
-unsigned int *frames;
+unsigned int *frames = (unsigned int *) 0x401000;
 unsigned int nframes = 0x80000;
 
 #define INDEX_FROM_BIT(a) (a/(8*4))

@@ -20,16 +20,13 @@ void init_timer() {
 
 void timer_intr(int no, struct regs *r) {
   ticks++;
-  if(ticks % 10 == 0) {
-    next_ctx(no, r);
-  }
+  next_ctx(no, r);
 }
 
 void delay(unsigned long amount) {
   unsigned long end = ticks + amount;
   unsigned long remain = 0;
   int i;
-  printf("%d: %x %x  %d %d\n", cur_ctx, &end, &ticks, end, ticks);
   while(ticks < end) {
     remain = end - ticks;
   }

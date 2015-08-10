@@ -23,6 +23,6 @@ taskid_t start_task(void (*entry)());
 void end_task(taskid_t id);
 void next_ctx(int no, struct regs *r);
 
-#define TASK_STACK_SIZE 0x1000
+#define TASK_STACK_SIZE 0x10000
 
 #endif

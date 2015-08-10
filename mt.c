@@ -18,8 +18,6 @@ void init_mt() {
   cur_ctx = 0;
   bzero(tasks, 65536 * sizeof(struct task *));
   install_handler(yield, 0x81);
-  tasks[0] = malloc(sizeof(struct task));
-  tasks[0]->state = malloc(sizeof(struct regs));
 }
 
 void task_wrapper() {
@@ -68,7 +66,7 @@ void next_ctx(int no, struct regs *r) {
     if(cur_ctx > 65535) cur_ctx = 1;
   } while(tasks[cur_ctx] == 0);
   tasks[cur_ctx]->state->useresp = tasks[cur_ctx]->state->esp;
-  printf("Loaded task %d useresp %x eip %x\n", cur_ctx, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->eip);
+  //  printf("Loaded task %d useresp %x eip %x\n", cur_ctx, tasks[cur_ctx]->state->useresp, tasks[cur_ctx]->state->eip);
   tasks[cur_ctx]->state->load_stack = 1;
   memcpy(r, tasks[cur_ctx]->state, sizeof(struct regs));
 }
