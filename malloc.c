@@ -1,47 +1,51 @@
 #include "malloc.h"
 #include "paging.h"
 
-unsigned char *malloc_arena = (unsigned char *)0x2000000;
+unsigned char *malloc_arena_kernel = (unsigned char *)0x2000000;
+unsigned char *malloc_arena_user =   (unsigned char *)0x4000000;
 
 void *malloc(unsigned int size) {
-  return malloc_ap(size, 0, 0);
+  return malloc_ap(size, 0, 0, 0);
 }
 
+void *malloc_user(unsigned int size, int user) {
+  return malloc_ap(size, 0, 0, user);
+}
 
 #ifndef USE_OLD_MALLOC
 
 #define PHY_TO_PAGE(addr) ((int) (addr) >> 12)
 
-void *alloc_new_header(struct malloc_header *headptr, unsigned int size) {
+void *alloc_new_header(struct malloc_header *headptr, unsigned int size, int align, int user) {
   unsigned int i;
   for(i = 0; i < size + sizeof(struct malloc_header); i += 0x1000) {
     if(!is_present(PHY_TO_PAGE((unsigned int) headptr + i)))
-      nonidentity_page(PHY_TO_PAGE((unsigned int) headptr + i));
+      nonidentity_page(PHY_TO_PAGE((unsigned int) headptr + i), user);
   }
   // Now that the block's paged in, we can write our header.
   headptr->length = size;
   headptr->flags = FLAG_INUSE | FLAG_ALLOCATED;
   headptr->magic = MALLOC_MAGIC;
+  printf("Allocated a new block at %x\n", headptr);
   return headptr + 1;
 }
 
-void *malloc_ap(unsigned int size, int align, void *phy) {
+void *malloc_ap(unsigned int size, int align, void *phy, int user) {
   // Set our head to the start of the arena and prepare to traverse
   // it.
-  struct malloc_header *headptr = (struct malloc_header *) malloc_arena;
-
+  struct malloc_header *headptr = (struct malloc_header *) (user ? malloc_arena_user : malloc_arena_kernel);
   while(1) {
     //    printf("Checking block at %x\n", headptr);
     // First, check if we need to page the current header.
     if(!is_present(PHY_TO_PAGE(headptr))) {
-      nonidentity_page(PHY_TO_PAGE(headptr));
+      nonidentity_page(PHY_TO_PAGE(headptr), user);
     }
     // Now that we're sure this memory exists, check if there's a
     // header there.
     if(headptr->magic != MALLOC_MAGIC
        || !(headptr->flags & FLAG_ALLOCATED)) {
       // We've reached the end of the arena.
-      return alloc_new_header(headptr, size);
+      return alloc_new_header(headptr, size, align, user);
     } else {
       // This header exists.  If it's in use, we'll just go on to the
       // next one.
@@ -61,6 +65,7 @@ void *malloc_ap(unsigned int size, int align, void *phy) {
       }
       // Header is unused and fits our block, so let's allocate it! Not worrying about splitting blocks just yet.
       headptr->flags = FLAG_INUSE | FLAG_ALLOCATED;
+      printf("Allocated an old block at %x\n", headptr);
       return headptr + 1;
     }
   }

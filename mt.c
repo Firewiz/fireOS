@@ -25,22 +25,14 @@ void init_mt() {
   install_handler(yield, 0x81);
 }
 
-void task_wrapper() {
-  void (*entry)() = tasks[cur_ctx]->entry;
-  printf("Starting task %d\n", cur_ctx);
-  //  asm volatile("sti");
-  entry();
-  yield();
-}
-
 taskid_t start_task(void (*entry)(), int user) {
   int i;
   for(i = 1; i < 65535; i++) {
     if(tasks[i] == 0) break;
   }
-  tasks[i] = malloc(sizeof(struct task));
+  tasks[i] = malloc_user(sizeof(struct task), user);
   bzero(tasks[i], sizeof(struct task));
-  tasks[i]->state = malloc(sizeof(struct regs));
+  tasks[i]->state = malloc_user(sizeof(struct regs), user);
   bzero(tasks[i]->state, sizeof(struct regs));
   if(user) {
     tasks[i]->state->gs = tasks[i]->state->fs
@@ -54,14 +46,14 @@ taskid_t start_task(void (*entry)(), int user) {
       = tasks[i]->state->ds = 0x10;
     tasks[i]->state->cs = 0x08;
   }
-  tasks[i]->state->eip = (unsigned int) task_wrapper;
+  tasks[i]->state->eip = (unsigned int) entry;
   tasks[i]->entry = entry;
-  tasks[i]->stack_base = malloc(TASK_STACK_SIZE) + (TASK_STACK_SIZE - 16);
+  tasks[i]->stack_base = malloc_user(TASK_STACK_SIZE, user) + (TASK_STACK_SIZE - 16);
   tasks[i]->state->esp = (unsigned int) tasks[i]->stack_base;
   tasks[i]->state->useresp = (unsigned int) tasks[i]->stack_base;
   tasks[i]->usermode = user;
   if(user) {
-    tasks[i]->syscall_stack = malloc(SYSCALL_STACK_SIZE) + (SYSCALL_STACK_SIZE - 16);
+    tasks[i]->syscall_stack = malloc_user(SYSCALL_STACK_SIZE, user) + (SYSCALL_STACK_SIZE - 16);
   } else {
     tasks[i]->syscall_stack = 0;
   }
@@ -90,8 +82,8 @@ void next_ctx(int no, struct regs *r) {
     if(new_ctx > 65535) new_ctx = 1;
   } while(tasks[new_ctx] == 0 || tasks[new_ctx]->active != 1);
   tasks[new_ctx]->state->useresp = tasks[new_ctx]->state->esp;
-  /*  printf("%x %x Loaded task %d useresp %x eip %x\n", &tasks[new_ctx], tasks[new_ctx]->active,
-      new_ctx, tasks[new_ctx]->state->useresp, tasks[new_ctx]->state->eip); */
+  //  printf("%x %x Loaded task %d useresp %x eip %x\n", &tasks[new_ctx], tasks[new_ctx]->active,
+  //	 new_ctx, tasks[new_ctx]->state->useresp, tasks[new_ctx]->state->eip); 
   tasks[new_ctx]->state->load_stack = 1;
   if(tasks[new_ctx]->usermode) {
     set_kernel_stack((unsigned int) tasks[new_ctx]->syscall_stack);

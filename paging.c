@@ -47,8 +47,8 @@ static unsigned int first_frame() {
 
 void setup_paging() {
   int i;
-  for(i = 0; i < 0x1000; i++) {
-    pdir[i] = ((int) ptables + i) | 0x07;
+  for(i = 0; i < 1024; i++) {
+    pdir[i] = (((int) ptables) + i) | 0x07;
   }
 }
 
@@ -69,13 +69,19 @@ void identity_page(unsigned int page_index) {
   set_frame(page_index);
 }
 
-void nonidentity_page(unsigned int page_index) {
+void nonidentity_page(unsigned int page_index, int user) {
   unsigned int phy_addr = first_frame();
-  mapped_page(page_index, phy_addr);
+  mapped_page(page_index, phy_addr, user);
 }
 
-void mapped_page(unsigned int page_index, unsigned int phy_addr) {
-  ptables[page_index] = phy_addr * 0x1000 | 0x07;
+void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {
+  if(page_index > 0x8000)
+    printf("Mapped page %x to %x (user %d)\n", page_index, phy_addr * 0x1000, user);
+  if(user) {
+    ptables[page_index] = phy_addr * 0x1000 | (0x07);
+  } else {
+    ptables[page_index] = phy_addr * 0x1000 | (0x03);
+  }
   set_frame(phy_addr);
 }
 

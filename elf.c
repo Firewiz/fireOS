@@ -10,12 +10,12 @@ void (*load_elf(unsigned char *file))(void) {
   memcpy(header, file, sizeof(struct elf_header));
   
   printf("Read ELF file header.\n");
-  printf("Bits %d, version %d, type %d, i-set %d.\n", header->bits * 32, header->version, header->type, header->iset);
-  printf("Program entry %x, header table position %x, header table entries %d (%d bytes each)\n", header->entry_pos, header->header_table_pos, header->phentries, header->phsize);
+  //  printf("Bits %d, version %d, type %d, i-set %d.\n", header->bits * 32, header->version, header->type, header->iset);
+  //  printf("Program entry %x, header table position %x, header table entries %d (%d bytes each)\n", header->entry_pos, header->header_table_pos, header->phentries, header->phsize);
   printf("Attempting to load program headers.\n");
   int i;
   for(i = 0; i < header->phentries; i++) {
-    printf("Reading header %d...\n", i);
+    printf("Reading header %d (%d bytes)...\n", i, header->phsize);
     memcpy(phead, file + header->header_table_pos + header->phsize * i, header->phsize);
     printf("Read header, section type %d, data offset %x, VM location %x, file size %d, mem size %d.\n", phead->stype, phead->p_offset, phead->p_vaddr, phead->p_filesz, phead->p_memsz);
     printf("Attempting to load section...\n");
@@ -28,7 +28,8 @@ void (*load_elf(unsigned char *file))(void) {
 	free(phead);
 	return 0;
       }
-      nonidentity_page(page / 0x1000);
+      printf("Mapping page %x\n", (page + phead->p_vaddr) / 0x1000);
+      nonidentity_page((page + phead->p_vaddr) / 0x1000, 1);
     }
     // load section
     memcpy((void *)phead->p_vaddr, file + phead->p_offset, phead->p_filesz);

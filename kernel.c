@@ -73,7 +73,7 @@ void kernel_main() {
   }
   vga_write("Non-identity paging 0x1000000 to 0x1800000\n");
   for(i = 0x1000; i < 0x1800; i++) {
-    nonidentity_page(i);
+    nonidentity_page(i, 0);
   }
   load_pagetable();
   vga_write("Done!\n");
