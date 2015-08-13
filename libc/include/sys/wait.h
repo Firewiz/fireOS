@@ -14,11 +14,11 @@
 #define WNOWAIT 1
 #define WSTOPPED 2
 
-enum idtype_t {
+typedef enum {
   P_ALL,
   P_PGID,
   P_PID
-};
+} idtype_t;
 
 #define _CROSS_INCLUDE
 #define NEED_ID_T
@@ -31,8 +31,8 @@ enum idtype_t {
 #include <signal.h>
 
 pid_t wait(int *);
-int waitid(idtype_t, id_t, siginfo_t *, int);
 pid_t waitpid(pid_t, int *, int);
+int waitid(idtype_t, id_t, siginfo_t *, int);
 
 #endif
 

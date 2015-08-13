@@ -2,15 +2,21 @@
 #define MALLOC_H
 
 struct malloc_header {
-  unsigned int length; // next header is at . + length + sizeof(struct malloc_header)
-  unsigned char flags;
   unsigned int magic;
-};
+  struct malloc_header *arena_head;
+  unsigned short btype, buser;
+  unsigned int length;
+  struct malloc_header *next;
+} __attribute__ ((packed));
 
-#define FLAG_INUSE 0x01
-#define FLAG_ALLOCATED 0x02
-#define MALLOC_MAGIC 0xCAFEBABE
+#define TYPE_FREE 0xF4EE
+#define TYPE_USED 0x25ED
+#define TYPE_KRNL 0x5157
+#define TYPE_USER 0x25E4
 
+#define MALLOC_MAGIC 0xA110C8ED
+  
+void init_malloc(void);
 void *malloc(unsigned int);
 void *malloc_user(unsigned int, int);
 void *malloc_ap(unsigned int, int, void *, int);

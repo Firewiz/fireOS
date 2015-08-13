@@ -63,23 +63,32 @@ void mt_test_4() {
 }
 
 void kernel_main() {
-  setup_gdt();
   vga_init();
+  printf("Initializing paging...\n");
   setup_paging();
   unsigned int i;
-  vga_write("Identity paging to 0x1000000\n");
+  vga_write("Identity paging to 0x01000000\n");
   for(i = 0; i < 0x1000; i++) {
     identity_page(i);
   }
-  vga_write("Non-identity paging 0x1000000 to 0x1800000\n");
+  *((unsigned int *) 0x20) = 0x0A55FACE;
+  vga_write("Non-identity paging 0x01000000 to 0x01800000\n");
   for(i = 0x1000; i < 0x1800; i++) {
     nonidentity_page(i, 0);
   }
+  printf("Setting up malloc...\n");
+  init_malloc();
+  printf("Loading page table...\n");
   load_pagetable();
-  vga_write("Done!\n");
+  printf("Installing GDT...\n");
+  setup_gdt();
+  printf("Installing IDT...\n");
   setup_idt();
+  printf("Installing exception handlers...\n");
   install_exc_handlers();
+  printf("Setting up IRQs...\n");
   init_irq();
+  printf("Registering syscall interface...\n");
   register_syscall(0x80);
   vga_write("Welcome to ");
   vga_setcolor(vga_color(COLOR_RED, COLOR_BLACK));
@@ -93,6 +102,11 @@ void kernel_main() {
   timer_phase(100);
   init_timer();
 
+  void *a1 = malloc(8);
+  void *a2 = malloc_user(8, 1);
+  void *a3 = malloc(0x10000);
+  void *a4 = malloc(0x10000);
+  
   init_mt();
   vga_write("Setting MT entry point.\n");
   taskid_t test_id = start_task(mt_test, 0);

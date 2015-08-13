@@ -1,0 +1,6 @@
+Name		Base		Offset
+Page Directory  0x00200000	0x400
+Page Frames	0x00200400      0x8000
+Page Tables	0x00208400	0x400000
+Task List	0x00608400	0x40000
+(end)		0x00648400

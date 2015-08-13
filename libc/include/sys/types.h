@@ -11,7 +11,7 @@ typedef int dev_t;
 typedef long fsblkcnt_t;
 typedef long fsfilcnt_t;
 typedef int gid_t;
-typedef int id_t;
+#define NEED_ID_T
 typedef long ino_t;
 typedef int key_t;
 typedef int mode_t;
@@ -44,37 +44,53 @@ typedef int trace_id_t;
 
 #endif
 
-#ifdef NEED_SIZE_T
+#endif
+
+#if defined NEED_ID_T && !(defined HAVE_ID_T)
+#define HAVE_ID_T
+typedef int id_t;
+#endif
+#if defined NEED_SIZE_T && !(defined HAVE_SIZE_T)
+#define HAVE_SIZE_T
 typedef unsigned long size_t;
 #endif
-#ifdef NEED_OFF_T
+#if defined NEED_OFF_T && !(defined HAVE_OFF_T)
+#define HAVE_OFF_T
 typedef long off_t;
 #endif
-#ifdef NEED_SSIZE_T
+#if defined NEED_SSIZE_T && !(defined HAVE_SSIZE_T)
+#define HAVE_SSIZE_T
 typedef long ssize_t;
 #endif
-#ifdef NEED_UID_T
+#if defined NEED_UID_T && !(defined HAVE_UID_T)
+#define HAVE_UID_T
 typedef int uid_t;
 #endif
-#ifdef NEED_PTHREAD_T
+#if defined NEED_PTHREAD_T && !(defined HAVE_PTHREAD_T)
+#define HAVE_PTHREAD_T
 typedef int pthread_t;
 #endif
-#ifdef NEED_TIME_T
+#if defined NEED_TIME_T && !(defined HAVE_TIME_T)
+#define HAVE_TIME_T
 typedef long time_t;
 #endif
-#ifdef NEED_CLOCK_T
+#if defined NEED_CLOCK_T && !(defined HAVE_CLOCK_T)
+#define HAVE_CLOCK_T
 typedef long clock_t;
 #endif
-#ifdef NEED_CLOCKID_T
+#if defined NEED_CLOCKID_T && !(defined HAVE_CLOCKID_T)
+#define HAVE_CLOCKID_T
 typedef int clockid_t;
 #endif
-#ifdef NEED_TIMER_T
+#if defined NEED_TIMER_T && !(defined HAVE_TIMER_T)
+#define HAVE_TIMER_T
 typedef int timer_t;
 #endif
-#ifdef NEED_PID_T
+#if defined NEED_PID_T && !(defined HAVE_PID_T)
+#define HAVE_PID_T
 typedef unsigned short pid_t;
 #endif
-#ifdef NEED_PTHREAD_ATTR_T
+#if defined NEED_PTHREAD_ATTR_T && !(defined HAVE_PTHREAD_ATTR_T)
+#define HAVE_PTHREAD_ATTR_T
 typedef int pthread_attr_t;
-#endif
 #endif

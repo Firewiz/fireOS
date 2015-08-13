@@ -26,9 +26,8 @@ void timer_intr(int no, struct regs *r) {
 
 void delay(unsigned long amount) {
   unsigned long end = ticks + amount;
-  unsigned long remain = 0;
   int i;
   while(ticks < end) {
-    remain = end - ticks;
+    ;
   }
 }

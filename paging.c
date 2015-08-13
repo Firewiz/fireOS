@@ -1,10 +1,12 @@
 #include "paging.h"
+#include "printf.h"
+#include "static.h"
 
-unsigned int *pdir = (unsigned int *) 0x400000;
-unsigned int *ptables = (unsigned int *) 0x405000;
+unsigned int *pdir = (unsigned int *) PAGEDIR_BASE;
+unsigned int *ptables = (unsigned int *) PAGETABLE_BASE;
 
-unsigned int *frames = (unsigned int *) 0x401000;
-unsigned int nframes = 0x80000;
+unsigned int *frames = (unsigned int *) PAGEFRAME_BASE;
+unsigned int nframes = 0x100000;
 
 #define INDEX_FROM_BIT(a) (a/(8*4))
 #define OFFSET_FROM_BIT(a) (a%(8*4))
@@ -47,8 +49,12 @@ static unsigned int first_frame() {
 
 void setup_paging() {
   int i;
+  unsigned int ptable_addr;
   for(i = 0; i < 1024; i++) {
-    pdir[i] = (((int) ptables) + i) | 0x07;
+    ptable_addr = &ptables[i * 1024];
+    ptable_addr = (unsigned int) ptables;
+    ptable_addr += (i * 0x1000);
+    pdir[i] = ptable_addr | USER | PRESENT | RW;
   }
 }
 
@@ -65,22 +71,24 @@ void load_pagetable() {
 // mapped_page: page this virtual memory here
 
 void identity_page(unsigned int page_index) {
-  ptables[page_index] = page_index * 0x1000 | 0x07;
+  ptables[page_index] = page_index * 0x1000 | PRESENT | RW | USER;
   set_frame(page_index);
 }
 
+static int nipage_idx = 0x1000;
+
 void nonidentity_page(unsigned int page_index, int user) {
-  unsigned int phy_addr = first_frame();
-  mapped_page(page_index, phy_addr, user);
+  //  unsigned int phy_addr = first_frame();
+  mapped_page(page_index, nipage_idx++, user);
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {
   if(page_index > 0x8000)
-    printf("Mapped page %x to %x (user %d)\n", page_index, phy_addr * 0x1000, user);
+    printf("Mapped page %x to %x (user %d)\n", page_index, phy_addr, user);
   if(user) {
-    ptables[page_index] = phy_addr * 0x1000 | (0x07);
+    ptables[page_index] = phy_addr * 0x1000 | (PRESENT | RW | USER);
   } else {
-    ptables[page_index] = phy_addr * 0x1000 | (0x03);
+    ptables[page_index] = phy_addr * 0x1000 | (PRESENT | RW);
   }
   set_frame(phy_addr);
 }

@@ -8,15 +8,9 @@
 #define RAND_MAX 32767
 #define MB_CUR_MAX ((size_t) 4)
 
-#define _CROSS_INCLUDE
-#define NEED_NULL
-#define NEED_SIZE_T
-#define NEED_WCHAR_T
 #include <stddef.h>
-#undef NEED_NULL
-#undef NEED_SIZE_T
-#undef NEED_WCHAR_T
-#undef _CROSS_INCLUDE
+#include <limits.h>
+#include <math.h>
 
 struct _div {
   // TODO
@@ -34,11 +28,7 @@ typedef struct _div div_t;
 typedef struct _ldiv ldiv_t;
 typedef struct _lldiv lldiv_t;
 
-#define _CROSS_INCLUDE
-#define NEED_STDLIB_CONSTANTS
 #include <sys/wait.h>
-#undef NEED_STDLIB_CONSTANTS
-#undef _CROSS_INCLUDE
 
 void _Exit(int);
 void abort(void);
@@ -61,13 +51,28 @@ long long llabs(long long);
 lldiv_t lldiv(long long, long, long);
 void *malloc(size_t);
 int mblen(const char *, size_t);
-size_t mbstowcs(wchar_t *restrict, const char *restrict, size_t);
-int mbtowc(wchar_t *restrict, const char *restrict, size_t);
+size_t mbstowcs(wchar_t *, const char *, size_t);
+int mbtowc(wchar_t *, const char *, size_t);
 char *mkdtemp(char *);
 int mkstemp(char *);
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *));
 int rand(void);
 int rand_r(unsigned *);
+void *realloc(void *, size_t);
+int setenv(const char *, const char *, int);
+void srand(unsigned);
+double strtod(const char *, const char **);
+float strtof(const char *, const char **);
+long strtol(const char *, const char **);
+long double strtold(const char *, const char **);
+long long strtoll(const char *, const char **);
+unsigned long strtoul(const char *, const char **);
+unsigned long long strtoull(const char *, const char **);
+int system(const char *);
+int unsetenv(const char *);
+size_t wcstombs(char *, const wchar_t *, size_t);
+int wctomb(char *, wchar_t);
+
 #endif
 
 #endif

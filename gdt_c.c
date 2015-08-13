@@ -1,11 +1,12 @@
 #include "gdt.h"
 #include "stdlib.h"
+#include "static.h"
 
-static struct gdt_entry_bits gdt[6];
-static struct tss_entry tss;
+static struct gdt_entry_bits *gdt = (struct gdt_entry_bits *) GDT_BASE;
+static struct tss_entry *tss = (struct tss_entry *) TSS_BASE;
 
 void install_tss(struct gdt_entry_bits *g) {
-  unsigned int base = (unsigned int) &tss;
+  unsigned int base = (unsigned int) tss;
   unsigned int limit = base + sizeof(struct tss_entry);
 
   g->base_low = base & 0xFFFFFF;
@@ -22,24 +23,24 @@ void install_tss(struct gdt_entry_bits *g) {
   g->big = 0;
   g->gran = 0;
   g->base_high = (base & 0xFF000000) >> 24;
-  bzero(&tss, sizeof(tss));
+  bzero(tss, sizeof(struct tss_entry));
 
-  tss.ss0 = 0x10;
-  tss.esp0 = 0;
+  tss->ss0 = 0x10;
+  tss->esp0 = 0;
 }
 
 void set_kernel_stack(unsigned int esp) {
-  tss.esp0 = esp;
+  tss->esp0 = esp;
 }
   
 
 void setup_gdt() {
-  bzero(gdt, sizeof(gdt));
+  bzero(gdt, GDT_OFFSET);
   struct gdt_entry_bits *kcode, *kdata, *ucode, *udata;
-  kcode = (struct gdt_entry_bits *) &gdt[1];
-  kdata = (struct gdt_entry_bits *) &gdt[2];
-  ucode = (struct gdt_entry_bits *) &gdt[3];
-  udata = (struct gdt_entry_bits *) &gdt[4];
+  kcode = (struct gdt_entry_bits *) gdt + 1;
+  kdata = (struct gdt_entry_bits *) gdt + 2;
+  ucode = (struct gdt_entry_bits *) gdt + 3;
+  udata = (struct gdt_entry_bits *) gdt + 4;
   kcode->limit_low=0xFFFF;
   kcode->base_low=0;
   kcode->accessed=0;
@@ -61,9 +62,9 @@ void setup_gdt() {
   kdata->code = udata->code = 0;
   udata->DPL = ucode->DPL = 3;
 
-  install_tss(&gdt[5]);
+  install_tss(gdt + 5);
   
-  install_gdt(gdt, sizeof(gdt));
+  install_gdt(gdt, GDT_OFFSET);
 
   tss_flush();
 }

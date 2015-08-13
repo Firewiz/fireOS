@@ -6,9 +6,11 @@
 #include "stdlib.h"
 #include "gdt.h"
 #include "printf.h"
+#include "static.h"
 
-static volatile struct task *tasks[65536];
+volatile struct task **tasks = (volatile struct task **) TASKLIST_BASE;
 volatile int cur_ctx;
+volatile int ctx_lock;
 
 void yield() {
   printf("Task %d ended\n", cur_ctx);
@@ -18,11 +20,12 @@ void yield() {
 }
 
 void init_mt() {
-  //  tasks = malloc(sizeof(struct task *) * 65536);
+  //tasks = malloc(sizeof(struct task *) * 65536);
   printf("Tasks at 0x%x\n", &tasks);
   cur_ctx = 0;
   bzero(tasks, 65536 * sizeof(struct task *));
   install_handler(yield, 0x81);
+  ctx_lock = 0;
 }
 
 taskid_t start_task(void (*entry)(), int user) {
@@ -31,7 +34,7 @@ taskid_t start_task(void (*entry)(), int user) {
     if(tasks[i] == 0) break;
   }
   tasks[i] = malloc_user(sizeof(struct task), user);
-  bzero(tasks[i], sizeof(struct task));
+  bzero((void *) tasks[i], sizeof(struct task));
   tasks[i]->state = malloc_user(sizeof(struct regs), user);
   bzero(tasks[i]->state, sizeof(struct regs));
   if(user) {
@@ -62,17 +65,26 @@ taskid_t start_task(void (*entry)(), int user) {
   return i;
 }
 
+void free_list(struct fd_list *l) {
+  if(l == 0) return;
+  free_list(l->next);
+  free(l);
+}
+
 void end_task(taskid_t id) {
   if(tasks[id] == 0) return;
   tasks[id]->active = 0;
   free(tasks[id]->syscall_stack);
   free(tasks[id]->stack_base);
   free(tasks[id]->state);
-  free(tasks[id]);
+  free_list(tasks[id]->fds);
+  free((void *) tasks[id]);
   tasks[id] = 0;
 }
 
 void next_ctx(int no, struct regs *r) {
+  if(ctx_lock) return;
+  ctx_lock = 1;
   int new_ctx = cur_ctx;
   if(tasks[cur_ctx] != 0) {// task ended since last timeslice
     memcpy(tasks[cur_ctx]->state, r, sizeof(struct regs));
@@ -90,4 +102,5 @@ void next_ctx(int no, struct regs *r) {
   }
   memcpy(r, tasks[new_ctx]->state, sizeof(struct regs));
   cur_ctx = new_ctx;
+  ctx_lock = 0;
 }

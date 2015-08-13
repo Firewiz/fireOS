@@ -32,6 +32,18 @@ union sigval {
   void *sival_ptr;
 };
 
+struct _siginfo_t {
+  int si_signo;
+  int si_code;
+  pid_t si_pid;
+  uid_t si_uid;
+  void *si_addr;
+  int si_status;
+  union sigval si_value;
+};
+
+typedef struct _siginfo_t siginfo_t;
+
 struct sigevent {
   int sigev_notify;
   int sigev_signo;
@@ -93,8 +105,8 @@ struct sigaction {
 #define SA_SIGINFO 4
 #define SA_NOCLDWAIT 5
 #define SA_NODEFER 6
-#define SA_ONSTACK 7
-#define SA_DISABLE 8
+#define SS_ONSTACK 7
+#define SS_DISABLE 8
 
 #define MINSIGSTKSZ 1024
 #define SIGSTKSZ 1024
@@ -116,17 +128,7 @@ struct _ucontext_t {
   mcontext_t uc_mcontext;
 };
 
-typedef struct _ucontext_t ucontext_t
-
-struct _siginfo_t {
-  int si_signo;
-  int si_code;
-  pid_t si_pid;
-  uid_t si_uid;
-  void *si_addr;
-  int si_status;
-  union sigval si_value;
-};
+typedef struct _ucontext_t ucontext_t;
 
 #define ILL_ILLOPC 0
 #define ILL_ILLOPN 1
@@ -162,9 +164,9 @@ int kill(pid_t, int);
 void psiginfo(const siginfo_t *, const char *);
 void psignal(int, const char *);
 int pthread_kill(pthread_t, int);
-int pthread_sigmask(int, const sigset_t *restrict, sigset_t *restrict);
+int pthread_sigmask(int, const sigset_t *, sigset_t *);
 int raise(int);
-int sigaction(int, const struct sigaction *restrict, struct sigaction *restrict);
+int sigaction(int, const struct sigaction *, struct sigaction *);
 int sigaddset(sigset_t *, int);
 int sigdelset(sigset_t *, int);
 int sigemptyset(sigset_t *);
@@ -172,12 +174,12 @@ int sigfillset(sigset_t *);
 int sigismember(const sigset_t *, int);
 void (*signal(int, void (*)(int)))(int);
 int sigpending(sigset_t *);
-int sigprocmask(int, const sigset_t *restrict, sigset_t *restrict);
+int sigprocmask(int, const sigset_t *, sigset_t *);
 int sigqueue(pid_t, int, const union sigval);
 int sigsuspend(const sigset_t *);
-int sigtimedwait(const sigset_t *restrict, siginfo_t *restrict, const struct timespec *restrict);
-int sigwait(const sigset_t *restrict, int *restrict);
-int sigwaitinfo(const sigset_t *restrict, siginfo_t *restrict);
+int sigtimedwait(const sigset_t *, siginfo_t *, const struct timespec *);
+int sigwait(const sigset_t *, int *);
+int sigwaitinfo(const sigset_t *, siginfo_t *);
 
 #endif
 

@@ -1,15 +1,59 @@
 #include "../include/stdio.h"
 #include "../include/string.h"
 #include "../include/syscall.h"
+#include <stdlib.h>
 
-int putchar(int c) {
-  return sys_write(1, (char *) &c, 1);
+FILE *_new_file(int r, int w) {
+  FILE *new = malloc(sizeof(FILE));
+  new->wbufp = new->rbufp = 0;
+  if(w) new->wbuffer = malloc(BUFSIZ);
+  else new->wbuffer = 0;
+  if(r) new->rbuffer = malloc(BUFSIZ);
+  else new->rbuffer = 0;
+  new->fd = sys_getfd();
+  sys_clearfdflag(new->fd, FD_ALL);
+  if(w)
+    sys_setfdflag(new->fd, FD_WRITEABLE);
+  if(r)
+    sys_setfdflag(new->fd, FD_READABLE);
+  return new;
+}
+
+void _setup_stdio(void) {
+  _stdin = _new_file(1, 0);
+  _stdout = _new_file(0, 1);
+  _stderr = _new_file(0, 1);
+  sys_setfdflag(_stdin->fd, FD_TERMINAL);
+  sys_setfdflag(_stdout->fd, FD_TERMINAL);
+  sys_setfdflag(_stderr->fd, FD_TERMINAL);
+}
+
+int _flush_writebuf(FILE *f) {
+  int r = sys_write(f->fd, f->wbuffer, f->wbufp);
+  f->wbufp = 0;
+  return r;
+}
+
+int fputc(int c, FILE *f) {
+  if(f->wbufp < BUFSIZ) {
+    f->wbuffer[f->wbufp++] = c;
+    if(c == '\n') _flush_writebuf(f);
+    return 1;
+  }
+  else return 0;
+}
+
+int fputs(const char *str, FILE *f) {
+  int len = strlen(str);
+  int i, total = 0;
+  for(i = 0; i < len; i++)
+    total += fputc(str[i], f);
+  total += fputc('\n', f);
+  return total;
 }
 
 int puts(const char *str) {
-  int total = sys_write(1, str, strlen(str));
-  total += putchar('\n');
-  return total;
+  return fputs(str, _stdout);
 }
 
 int _putstr(const char *str) {

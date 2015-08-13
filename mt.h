@@ -3,20 +3,33 @@
 
 #ifndef DEFS
 extern volatile int cur_ctx;
-extern struct task *tasks[65536];
+extern volatile struct task **tasks;
 #undef DEFS
 #endif
 
 #include "irq.h"
+
+#define FD_READABLE 0x1
+#define FD_WRITEABLE 0x2
+#define FD_TERMINAL 0x4
+#define FD_HAS_NAME 0x8
+
+struct fd_list {
+  struct fd_list *next;
+  unsigned int fd_no;
+  unsigned int fd_flags;
+  char *name;
+};
 
 struct task {
   int active;
   struct regs *state;
   void (*entry)();
   void *stack_base;
-  char name[80];
+  char *name;
   char usermode;
   void *syscall_stack;
+  struct fd_list *fds;
 };
 
 typedef unsigned short taskid_t;
