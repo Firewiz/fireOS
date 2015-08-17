@@ -21,5 +21,6 @@ void *malloc(unsigned int);
 void *malloc_user(unsigned int, int);
 void *malloc_ap(unsigned int, int, void *, int);
 void free(void *);
-
+#include "mt.h"
+void allocate_pages(void *, unsigned int, int, taskid_t);
 #endif

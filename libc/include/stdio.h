@@ -49,7 +49,9 @@ typedef struct _file_t FILE;
 
 #define P_tmpdir "/tmp/"
 
-FILE *_stderr, *_stdin, *_stdout;
+#ifndef _DEFS
+extern FILE *_stderr, *_stdin, *_stdout;
+#endif
 
 void _setup_stdio(void);
 

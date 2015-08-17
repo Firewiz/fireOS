@@ -77,14 +77,13 @@ void identity_page(unsigned int page_index) {
 
 static int nipage_idx = 0x1000;
 
-void nonidentity_page(unsigned int page_index, int user) {
+unsigned int nonidentity_page(unsigned int page_index, int user) {
   //  unsigned int phy_addr = first_frame();
-  mapped_page(page_index, nipage_idx++, user);
+  mapped_page(page_index, nipage_idx, user);
+  return nipage_idx++;
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {
-  if(page_index > 0x8000)
-    printf("Mapped page %x to %x (user %d)\n", page_index, phy_addr, user);
   if(user) {
     ptables[page_index] = phy_addr * 0x1000 | (PRESENT | RW | USER);
   } else {

@@ -53,6 +53,7 @@ struct program_header {
   unsigned int align;
 } __attribute__ ((packed));
 
-void (*load_elf(unsigned char *))(void);
+#include "mt.h"
+taskid_t load_elf(unsigned char *);
 
 #endif

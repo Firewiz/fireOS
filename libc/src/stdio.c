@@ -1,21 +1,26 @@
+#define _DEFS
 #include "../include/stdio.h"
+#undef _DEFS
 #include "../include/string.h"
 #include "../include/syscall.h"
 #include <stdlib.h>
 
+FILE *_stdin, *_stdout, *_stderr;
+
 FILE *_new_file(int r, int w) {
   FILE *new = malloc(sizeof(FILE));
   new->wbufp = new->rbufp = 0;
-  if(w) new->wbuffer = malloc(BUFSIZ);
-  else new->wbuffer = 0;
-  if(r) new->rbuffer = malloc(BUFSIZ);
-  else new->rbuffer = 0;
+  new->wbuffer = new->rbuffer = 0;
   new->fd = sys_getfd();
   sys_clearfdflag(new->fd, FD_ALL);
-  if(w)
-    sys_setfdflag(new->fd, FD_WRITEABLE);
-  if(r)
+  if(r) {
+    new->rbuffer = malloc(BUFSIZ);
     sys_setfdflag(new->fd, FD_READABLE);
+  }
+  if(w) {
+    new->wbuffer = malloc(BUFSIZ);
+    sys_setfdflag(new->fd, FD_WRITEABLE);
+  }
   return new;
 }
 

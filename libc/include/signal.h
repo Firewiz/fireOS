@@ -22,8 +22,6 @@
 #undef NEED_PTHREAD_T
 #undef _CROSS_INCLUDE
 
-#include <time.h>
-
 typedef volatile int sig_atomic_t;
 typedef int sigset_t;
 
@@ -51,6 +49,8 @@ struct sigevent {
   void (*sigev_notify_function)(union sigval);
   pthread_attr_t *sigev_notify_attributes;
 };
+
+#include <time.h>
 
 #define SIGEV_NONE 0
 #define SIGEV_SIGNAL 1

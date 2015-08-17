@@ -19,7 +19,7 @@ struct idt_desc {
 } __attribute__((packed));
 
 struct regs {
-  unsigned int load_stack;
+  unsigned int preserve_eax, load_stack;
   unsigned int gs, fs, es, ds; // pushed manually
   unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // pushed by pusha
   unsigned int int_no, err_code; // pushed by ISR

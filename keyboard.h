@@ -6,7 +6,7 @@
 #define EXTERN
 #endif
 
-#define KB_BUFSIZE 32
+#define KB_BUFSIZE 256
 
 #define STATE_SHIFT 0x01
 
@@ -28,7 +28,9 @@
 #define KEY_F11 0x8F
 #define KEY_F12 0x90
 
-EXTERN unsigned char kb_buffer[KB_BUFSIZE];
+#define KEY_IS_CHAR(key) (!((key) & 0x80))
+
+EXTERN unsigned char *kb_buffer;
 EXTERN char key_table[2][128];
 EXTERN volatile int kb_write, kb_read, kb_state;
 

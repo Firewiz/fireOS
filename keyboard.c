@@ -5,8 +5,9 @@
 #include "asmintr.h"
 #include "vga.h"
 
-unsigned char kb_buffer[32];
+unsigned char *kb_buffer;
 volatile int kb_write, kb_read, kb_state = 0;
+
 char key_table[2][128] = {
   {
     0, '\e', '1', '2', '3', '4', '5', '6',
@@ -39,32 +40,26 @@ char key_table[2][128] = {
 };
 
 void keyboard_stuff_buffer() {
-  kb_buffer[kb_write++] = inb(0x60);
-  kb_write %= KB_BUFSIZE;
-}
-
-unsigned char getkey() {
-  while(kb_write == kb_read) ;
-  unsigned char r;
-  r = kb_buffer[kb_read++];
-  kb_read %= KB_BUFSIZE;
-  return r;
-}
-
-unsigned char getc() {
-  unsigned char key;
-  unsigned char c;
-  do {
-    key = getkey();
-    c = key_table[kb_state & STATE_SHIFT][key & 0x7F];
+  unsigned char key = inb(0x60);
+  unsigned char c = key_table[kb_state][key & 0x7F];
+  if(c & 0x80) {
     if(c == KEY_LSHIFT || c == KEY_RSHIFT) {
       if(key & 0x80)
 	kb_state &= ~STATE_SHIFT;
       else
 	kb_state |= STATE_SHIFT;
     }
-  } while(c & 0x80 || key & 0x80);
-  return c;
+  } else if(!(key & 0x80)) {
+    kb_buffer[kb_write++] = key_table[kb_state][key & 0x7F];
+    kb_write %= KB_BUFSIZE;
+  }
+}
+
+unsigned char getc() {
+  while(kb_read == kb_write) ;
+  char r = kb_buffer[kb_read++];
+  kb_read %= KB_BUFSIZE;
+  return r;
 }
 
 void getline(char *line) {
@@ -80,6 +75,7 @@ void getline(char *line) {
 }
 
 void init_keyboard() {
+  kb_buffer = malloc(KB_BUFSIZE);
   install_irq(keyboard_stuff_buffer, 1);
   kb_read = kb_write = 0;
 }

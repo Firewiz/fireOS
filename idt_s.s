@@ -55,7 +55,8 @@ isr_common_stub:
 	push es
 	push fs
 	push gs
-	push 0 ; load_stack bit
+	push dword 0 ; load_stack bit
+	push dword 0 ; preserve_eax bit
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
@@ -65,9 +66,12 @@ isr_common_stub:
 	push eax
 	mov eax, int_handler
 	call eax
+	mov ecx, eax
 	pop eax
 
-	pop eax
+	pop edx ; preserve_eax
+	
+	pop eax ; load_stack
 	test eax, eax
 	jne iret_load_stack
 cleanup:
@@ -76,7 +80,25 @@ cleanup:
 	pop fs
 	pop es
 	pop ds
+; at this point, we want to move ECX to EAX if EDX != 0... *after* the
+; POPA.
+; to do this, we'll fake the stack frame.
+	test edx, edx
+	je pop_frame
+; eax is at esp+28
+	mov [esp + 28], ecx
+pop_frame:
 	popa
+	
+;	pop edi
+;	pop esi
+;	pop ebp
+;       add esp, 4 
+;	pop ebx
+;	pop edx
+;	pop ecx
+;	pop eax
+	
 	add esp, 8
 	sti
 	or WORD [esp + 8], 0x200

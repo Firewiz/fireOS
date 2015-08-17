@@ -10,7 +10,8 @@
 void setup_paging();
 void load_pagetable();
 void identity_page(unsigned int);
-void nonidentity_page(unsigned int, int);
+unsigned int nonidentity_page(unsigned int, int);
 void mapped_page(unsigned int, unsigned int, int);
+void unmap_page(unsigned int);
 int is_present(unsigned int);
 #endif

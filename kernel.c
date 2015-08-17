@@ -71,7 +71,7 @@ void kernel_main() {
   for(i = 0; i < 0x1000; i++) {
     identity_page(i);
   }
-  *((unsigned int *) 0x20) = 0x0A55FACE;
+  *((unsigned int *) 0x20) = 0x89ABCDEF;
   vga_write("Non-identity paging 0x01000000 to 0x01800000\n");
   for(i = 0x1000; i < 0x1800; i++) {
     nonidentity_page(i, 0);
@@ -101,12 +101,6 @@ void kernel_main() {
   vga_write("Keyboard initialized\n");
   timer_phase(100);
   init_timer();
-
-  void *a1 = malloc(8);
-  void *a2 = malloc_user(8, 1);
-  void *a3 = malloc(0x10000);
-  void *a4 = malloc(0x10000);
-  
   init_mt();
   vga_write("Setting MT entry point.\n");
   taskid_t test_id = start_task(mt_test, 0);

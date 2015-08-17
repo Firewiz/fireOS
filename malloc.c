@@ -2,6 +2,14 @@
 #include "paging.h"
 #include "printf.h"
 #include "stdlib.h"
+#include "config.h"
+#include "mt.h"
+
+#ifdef DEBUG_MALLOC
+#define printd(f, ...) printf(f, __VA_ARGS__)
+#else
+#define printd(f, ...)
+#endif
 
 unsigned char *malloc_arena_kernel = (unsigned char *)0x2000000;
 unsigned char *malloc_arena_user =   (unsigned char *)0x4000000;
@@ -38,11 +46,25 @@ void *alloc_old_block(struct malloc_header *block, unsigned int size) {
   return block + 1;
 }
 
-void allocate_pages(void *base, unsigned int offset, int user) {
+void allocate_pages(void *base, unsigned int offset, int user, taskid_t tid) {
   unsigned int i;
   for(i = 0; i < offset; i += 0x1000)
-    if(!is_present(VADDR_TO_PAGE(i + base)))
-      nonidentity_page(VADDR_TO_PAGE(i + base), user);
+    if(!is_present(VADDR_TO_PAGE(i + base))) {
+      if(user) {
+	page_task(VADDR_TO_PAGE(i + base), tid, 1);
+      } else {
+	nonidentity_page(VADDR_TO_PAGE(i + base), 0);
+      }
+      printd("Paged in address %x %x\n", (i + base), offset);
+    }
+  if(offset % 0x1000 && !is_present(VADDR_TO_PAGE(offset + base))) {
+    if(user) {
+      page_task(VADDR_TO_PAGE(offset + base), tid, 1);
+    } else {
+      nonidentity_page(VADDR_TO_PAGE(offset + base), 0);
+    }
+    printd("Paged in address %x %x\n", (offset + base), offset);
+  }
 }
 
 #define PTR_ADD(p, q) ((int) ((void *) (p)) + ((void *) (q)))
@@ -65,7 +87,7 @@ void *alloc_new_block(struct malloc_header *arena_head, unsigned int size, int u
   }
   // at this point, p is the start of *our* header. if necessary, the
   // previous blocks' next pointer has been set.
-  allocate_pages(p, size + sizeof(struct malloc_header), user);
+  allocate_pages(p, size + sizeof(struct malloc_header), user, cur_ctx);
   p->magic = MALLOC_MAGIC;
   p->arena_head = arena_head;
   p->btype = TYPE_USED;

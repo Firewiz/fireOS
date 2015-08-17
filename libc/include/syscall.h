@@ -15,4 +15,5 @@ int sys_clearfdflag(unsigned int fd, unsigned int flags);
 unsigned int sys_getfdflags(unsigned int fd);
 void *sys_allocbuf(unsigned int len);
 int sys_freebuf(void *buf);
+unsigned long sys_read(unsigned int fd, char *buf, unsigned long count);
 #endif

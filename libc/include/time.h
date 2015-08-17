@@ -5,6 +5,8 @@
 #define NEED_TIMESPEC
 #endif
 
+#include <signal.h>
+
 #ifdef NEED_TIMESPEC
 #define _CROSS_INCLUDE
 #define NEED_TIME_T
@@ -102,7 +104,6 @@ void tzset(void);
 
 extern char *tzname[];
 
-#include <signal.h>
 int timer_create(clockid_t, struct sigevent *, timer_t *);
 
 #endif

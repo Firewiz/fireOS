@@ -43,7 +43,11 @@ void shell_main() {
     read_sector(file + (i * 512), 0, base_sector + i);
   }
   printf("File read.\nLoading ELF file...\n");
-  start_task(load_elf(file), 1);
+  int tid1 = load_elf(file);
+  int tid2 = load_elf(file);
+  printf("Files loaded.\n");
+  run_task(tid1);
+  run_task(tid2);
   free(rdir);
   yield();
 }
