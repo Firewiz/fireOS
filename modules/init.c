@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int main(void) {
-  printf("$ ");
+  printf("> ");
   char buf[32];
   sys_read(stdin->fd, buf, 32);
 }

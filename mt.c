@@ -101,10 +101,21 @@ void run_task(taskid_t id) {
   tasks[id]->active = 1;
 }
 
+void load_task_vm(taskid_t id) {
+  struct page_list *p = tasks[id]->pages;
+  while(p) {
+    if(is_present(p->vaddr))
+      unmap_page(p->vaddr);
+    mapped_page(p->vaddr, p->paddr, 1);
+    p = p->next;
+  }
+}
+
 void page_task(unsigned int vaddr, taskid_t id, int user) {
   unsigned int paddr = nonidentity_page(vaddr, user);
   struct page_list *p = tasks[id]->pages;
   printd("Paging in %x for %d\n", vaddr, id);
+  load_task_vm(id); // to avoid malloc confusion later
   if(p == 0) {
     p = malloc_user(sizeof(struct page_list), user);
     bzero(p, sizeof(struct page_list));
@@ -121,6 +132,7 @@ void page_task(unsigned int vaddr, taskid_t id, int user) {
   }
   if(vaddr > 0x8000)
     printd("Paged %x to %x for task %d (%d)\n", vaddr, paddr, id, user);
+  load_task_vm(cur_ctx);
 }
 
 void free_fd_list(struct fd_list *l) {
@@ -134,6 +146,21 @@ void free_page_list(struct page_list *l) {
   free_page_list(l->next);
   free(l);
 }
+
+struct fd_list *dup_fd_list(struct fd_list *l, taskid_t id) {
+  if(l == 0) return 0;
+  struct fd_list *r = malloc_user(sizeof(struct fd_list), 1);
+  r->next = dup_fd_list(l->next);
+  return r;
+}
+
+struct page_list *dup_page_list(struct page_list *l, taskid_t id) {
+  if(l == 0) return 0;
+  struct page_list *r = malloc_user(sizeof(struct page_list), 1);
+  r->next = dup_page_list(l->next);
+  return r;
+}
+
 
 void end_task(taskid_t id) {
   if(tasks[id] == 0) return;
@@ -172,4 +199,19 @@ void next_ctx(int no, struct regs *r) {
   memcpy(r, tasks[new_ctx]->state, sizeof(struct regs));
   cur_ctx = new_ctx;
   ctx_lock = 0;
+}
+
+taskid_t fork_task() {
+  int i;
+  for(i = 1; i < 65535; i++) {
+    if(tasks[i] == 0) break;
+  }
+  tasks[i] = malloc(sizeof(struct task));
+  memcpy(tasks[i], tasks[cur_ctx], sizeof(struct task));
+  tasks[i]->active = 0;
+  tasks[i]->state = malloc(sizeof(struct regs));
+  memcpy(tasks[i]->state, tasks[cur_ctx]->state, sizeof(struct regs));
+  struct page_list *p = tasks[cur_ctx]->pages;
+  void *tmp_page = malloc(4096);
+  // To be continued.
 }

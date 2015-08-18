@@ -14,4 +14,5 @@ unsigned int nonidentity_page(unsigned int, int);
 void mapped_page(unsigned int, unsigned int, int);
 void unmap_page(unsigned int);
 int is_present(unsigned int);
+unsigned int get_mapping(unsigned int);
 #endif

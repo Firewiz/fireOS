@@ -100,3 +100,7 @@ void unmap_page(unsigned int page_index) {
 int is_present(unsigned int page_index) {
   return ptables[page_index] & PRESENT;
 }
+
+unsigned int get_mapping(unsigned int page_index) {
+  return ptables[page_index] / 0x1000;
+}

@@ -32,7 +32,6 @@ struct task {
   struct regs *state;
   void (*entry)();
   void *stack_base;
-  char *name;
   void *syscall_stack;
   struct fd_list *fds;
   struct page_list *pages;
@@ -49,6 +48,7 @@ void end_task(taskid_t id);
 void next_ctx(int no, struct regs *r);
 void page_task(unsigned int vaddr, taskid_t id, int user);
 void yield();
+taskid_t fork_task(taskid_t orig);
 
 #define TASK_STACK_SIZE 0x10000
 #define SYSCALL_STACK_SIZE 0x10000
