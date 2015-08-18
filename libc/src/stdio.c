@@ -124,6 +124,7 @@ int printf(const char *fmt, ...) {
       written += putchar(c);
     }
   }
+  _flush_writebuf(stdout);
   __builtin_va_end(vl);
   return written;
 }

@@ -33,7 +33,6 @@ struct task {
   void (*entry)();
   void *stack_base;
   char *name;
-  char usermode;
   void *syscall_stack;
   struct fd_list *fds;
   struct page_list *pages;
@@ -42,10 +41,10 @@ struct task {
 typedef unsigned short taskid_t;
 
 void init_mt();
-taskid_t create_task(int user);
+taskid_t create_task();
 void set_entry(void (*entry)(), taskid_t id);
 void run_task(taskid_t id);
-taskid_t start_task(void (*entry)(), int user);
+taskid_t start_task(void (*entry)());
 void end_task(taskid_t id);
 void next_ctx(int no, struct regs *r);
 void page_task(unsigned int vaddr, taskid_t id, int user);

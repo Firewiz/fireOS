@@ -32,7 +32,6 @@ void handle_exception(int in, struct regs *r) {
 
 #ifdef BLUE_SCREEN
   vga_setcolor(vga_color(COLOR_LIGHT_RED, COLOR_BLACK));
-  vga_setcurs(0, 0);
   vga_write("Kernel panic: ");
   vga_write(exceptions[in]);
   printf(" (thread #%d)\n", cur_ctx);

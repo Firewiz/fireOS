@@ -5,10 +5,10 @@
 
 #ifdef DEBUG
 
-#define DEBUG_ELF
-#undef DEBUG_MALLOC
-#undef DEBUG_MT
-#undef DEBUG_MT_LOUD
+//#define DEBUG_ELF
+//#define DEBUG_MALLOC
+#define DEBUG_MT
+#define DEBUG_MT_LOUD
 
 #endif
 

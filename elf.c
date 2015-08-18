@@ -20,7 +20,7 @@ taskid_t load_elf(unsigned char *file) {
   printd("Bits %d, version %d, type %d, i-set %d.\n", header->bits * 32, header->version, header->type, header->iset);
   printd("Program entry %x, header table position %x, header table entries %d (%d bytes each)\n", header->entry_pos, header->header_table_pos, header->phentries, header->phsize);
   printd("Creating task...\n");
-  taskid_t tid = create_task(1);
+  taskid_t tid = create_task();
   printd("Attempting to load program headers.\n");
   int i;
   for(i = 0; i < header->phentries; i++) {

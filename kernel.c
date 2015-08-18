@@ -16,52 +16,6 @@
 #include "shell.h"
 #include "gdt.h"
 
-void mt_test() {
-  vga_write("MT test thread 1 initialized\n");
-  int i;
-  while(1) {
-    vga_addch('T', vga_color(COLOR_LIGHT_BROWN, COLOR_BLACK), 0, 0);
-    delay(50);
-    vga_addch('T', vga_color(COLOR_DARK_GREY, COLOR_BLACK), 0, 0);
-    delay(150);
-  }
-}
-
-void mt_test_2() {
-  vga_write("MT test thread 2 initialized\n");
-  int i;
-  while(1) {
-    delay(50);
-    vga_addch('e', vga_color(COLOR_LIGHT_RED, COLOR_BLACK), 1, 0);
-    delay(50);
-    vga_addch('e', vga_color(COLOR_DARK_GREY, COLOR_BLACK), 1, 0);
-    delay(100);
-  }
-}
-
-void mt_test_3() {
-  vga_write("MT test thread 3 initialized\n");
-  int i;
-  while(1) {
-    delay(100);
-    vga_addch('s', vga_color(COLOR_LIGHT_BLUE, COLOR_BLACK), 2, 0);
-    delay(50);
-    vga_addch('s', vga_color(COLOR_DARK_GREY, COLOR_BLACK), 2, 0);
-    delay(50);
-  }
-}
-
-void mt_test_4() {
-  vga_write("MT test thread 4 initialized\n");
-  int i;
-  while(1) {
-    delay(150);
-    vga_addch('t', vga_color(COLOR_LIGHT_GREEN, COLOR_BLACK), 3, 0);
-    delay(50);
-    vga_addch('t', vga_color(COLOR_DARK_GREY, COLOR_BLACK), 3, 0);
-  }
-}
-
 void kernel_main() {
   vga_init();
   printf("Initializing paging...\n");
@@ -102,13 +56,6 @@ void kernel_main() {
   timer_phase(100);
   init_timer();
   init_mt();
-  vga_write("Setting MT entry point.\n");
-  taskid_t test_id = start_task(mt_test, 0);
-  taskid_t test2_id= start_task(mt_test_2, 0);
-  taskid_t test3_id= start_task(mt_test_3, 0);
-  taskid_t test4_id= start_task(mt_test_4, 0);
-  taskid_t shell_id = start_task(shell_main, 0);
-  vga_write("Starting MT.\n");
-  asm volatile ("sti");
-  
+  vga_setcurs(0, 24);
+  shell_main();
 }

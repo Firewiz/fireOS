@@ -2,13 +2,15 @@
 #include "stdlib.h"
 #include "asmintr.h"
 
-unsigned char vga_row, vga_col;
+volatile unsigned char vga_row, vga_col;
 unsigned char vga_color;
 volatile unsigned short *vga_buf;
+char curs_state;
 
 void vga_init() {
   vga_row = 1;
   vga_col = 0;
+  curs_state = 0;
   vga_color = vga_color(COLOR_LIGHT_GREY, COLOR_BLACK);
   vga_buf = (unsigned short *) 0xB8000;
   unsigned char x, y;
@@ -17,6 +19,8 @@ void vga_init() {
       vga_buf[y * VGA_WIDTH + x] = vga_char(' ', vga_color);
     }
   }
+  outb(0x3d4, 0xa);
+  outb(0x3d5, 0x0d);
 }
 
 void vga_setcolor(unsigned char color) {
@@ -35,9 +39,8 @@ void vga_scroll() {
     }
   }
   for(x = 0; x < VGA_WIDTH; x++) {
-    vga_buf[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = 0;
+    vga_buf[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = vga_char(' ', vga_color);
   }
-  vga_updatepos();
 }
 
 void vga_putchar(char c) {
@@ -51,8 +54,7 @@ void vga_putchar(char c) {
     break;
   case '\b':
     vga_col = (vga_col == 0) ? 0 : vga_col - 1;
-    vga_putchar(' ');
-    vga_col = (vga_col == 0) ? 0 : vga_col - 1;
+    vga_addch(' ', vga_color, vga_col, vga_row);
     break;
   case 0:
     break;
@@ -68,17 +70,6 @@ void vga_putchar(char c) {
     vga_row--;
     vga_scroll();
   }
-}
-
-void vga_setcurs(char x, char y) {
-  unsigned short pos = (y * 80) + x;
-  outb(0x3D4, 0x0F);
-  outb(0x3D5, (unsigned char) pos & 0xFF);
-  outb(0x3D4, 0x0E);
-  outb(0x3D5, (unsigned char) (pos >> 8) & 0xFF);
-}
-
-void vga_updatepos() {
   vga_setcurs(vga_col, vga_row);
 }
 
@@ -87,5 +78,12 @@ void vga_write(char *s) {
   unsigned long i;
   for(i = 0; i < len; i++)
     vga_putchar(s[i]);
-  vga_setcurs(vga_col, vga_row);
+}
+
+void vga_setcurs(char x, char y) {
+  unsigned short l = ((unsigned short) y * 80) + (unsigned short) x;
+  outb(0x3d4, 0x0f);
+  outb(0x3d5, (unsigned char) (l & 0xFF));
+  outb(0x3d4, 0x0e);
+  outb(0x3d5, (unsigned char) ((l & 0xFF00) >> 8));
 }

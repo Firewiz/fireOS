@@ -67,7 +67,6 @@ void getline(char *line) {
   while(1) {
     c = getc();
     vga_putchar(c);
-    vga_updatepos();
     *line = c;
     line++;
     if(c == '\n') break;

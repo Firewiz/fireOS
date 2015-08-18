@@ -55,3 +55,12 @@ void bzero(void *mem, unsigned int n) {
     ((char *) mem)[i] = 0;
   }
 }
+
+int streq(const char *s1, const char *s2) {
+  int l1 = strlen(s1), l2 = strlen(s2);
+  if(l1 != l2) return 0;
+  int i;
+  for(i = 0; i < l1; i++)
+    if(s1[i] != s2[i]) return 0;
+  return 1;
+}

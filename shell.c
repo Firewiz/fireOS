@@ -25,12 +25,13 @@ void shell_main() {
     if(rdir[i].filename[0] == (signed char) 0xE5) continue;
     if(rdir[i].attrs == 0x0F) continue;
     parse_filename(rdir[i].filename, name, ext);
+    if(streq(name, "INIT") && streq(ext, "EXE")) {
+      printf("Found init (%d)\n", i);
+      selection = i;
+    }
     printf("%d\t%s\t %s\t%d\t%d (%d)\n", i, name, ext, rdir[i].size,
 	   rdir[i].cluster_low, rdir[i].cluster_low * filesys.bpb.spc + filesys.first_data - 7);
   }
-  printf("Load program: ");
-  getline(line);
-  selection = atoi(line);
   parse_filename(rdir[selection].filename, name, ext);
   printf("Reading file %d (%s.%s)...\n", selection, name, ext);
   unsigned int n_file_sectors = rdir[selection].size;
@@ -44,11 +45,10 @@ void shell_main() {
   }
   printf("File read.\nLoading ELF file...\n");
   int tid1 = load_elf(file);
-  int tid2 = load_elf(file);
   printf("Files loaded.\n");
-  run_task(tid1);
-  run_task(tid2);
   free(rdir);
-  yield();
+  vga_write("Starting MT.\n");
+  run_task(tid1);
+  asm volatile ("sti");
 }
 

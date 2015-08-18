@@ -9,4 +9,5 @@ void itoa(int n, char s[]);
 int atoi(char *);
 void memcpy(void *dest, const void *src, unsigned int n);
 void bzero(void *mem, unsigned int n);
+int streq(const char *s1, const char *s2);
 #endif

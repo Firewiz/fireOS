@@ -40,7 +40,6 @@ int handle_syswrite(unsigned int fd, char *buf, unsigned int count) {
       for(i = 0; i < count; i++) {
 	vga_putchar(buf[i]);
       }
-      vga_updatepos();
     } else {
       return 0; // not implemented yet
     }	
@@ -153,7 +152,6 @@ int handle_sysread(unsigned int fd, char *buf, unsigned int count) {
       for(i = 0; i < count; i++) {
 	c = getc();
 	vga_putchar(c);
-	vga_updatepos();
 	buf[i] = c;
 	read++;
 	if(c == '\n') break;

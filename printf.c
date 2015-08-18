@@ -34,6 +34,5 @@ void printf(char *fmt, ...) {
       vga_putchar(c);
     }
   }
-  vga_updatepos();
   __builtin_va_end(vl);
 }
