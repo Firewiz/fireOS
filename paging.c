@@ -78,9 +78,9 @@ void identity_page(unsigned int page_index) {
 static int nipage_idx = 0x1000;
 
 unsigned int nonidentity_page(unsigned int page_index, int user) {
-  //  unsigned int phy_addr = first_frame();
-  mapped_page(page_index, nipage_idx, user);
-  return nipage_idx++;
+  unsigned int phy_addr = first_frame();
+  mapped_page(page_index, phy_addr, user);
+  return phy_addr;
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {

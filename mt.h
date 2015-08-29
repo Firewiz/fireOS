@@ -27,17 +27,23 @@ struct page_list {
   unsigned int paddr;
 };
 
+typedef unsigned short taskid_t;
+
 struct task {
   int active;
   struct regs *state;
+  struct regs *syscall_state;
   void (*entry)();
   void *stack_base;
   void *syscall_stack;
   struct fd_list *fds;
   struct page_list *pages;
+  taskid_t state_copy;
+  int swapped;
+  int usermode;
+  void *fork_pad;
 };
 
-typedef unsigned short taskid_t;
 
 void init_mt();
 taskid_t create_task();
@@ -48,7 +54,7 @@ void end_task(taskid_t id);
 void next_ctx(int no, struct regs *r);
 void page_task(unsigned int vaddr, taskid_t id, int user);
 void yield();
-taskid_t fork_task(taskid_t orig);
+taskid_t fork_task();
 
 #define TASK_STACK_SIZE 0x10000
 #define SYSCALL_STACK_SIZE 0x10000

@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(void) {
-  printf("> ");
-  char buf[32];
-  sys_read(stdin->fd, buf, 32);
+  if(fork()) {
+    printf("Hello, World!\n");
+  } else {
+    printf("Task 2!\n");
+  }
 }

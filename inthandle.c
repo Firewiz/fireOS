@@ -32,7 +32,7 @@ void handle_exception(int in, struct regs *r) {
 
 #ifdef BLUE_SCREEN
   vga_setcolor(vga_color(COLOR_LIGHT_RED, COLOR_BLACK));
-  vga_write("Kernel panic: ");
+  vga_write("Exception: ");
   vga_write(exceptions[in]);
   printf(" (thread #%d)\n", cur_ctx);
   if(r->load_stack) printf("Stack loaded\n");
@@ -43,12 +43,14 @@ void handle_exception(int in, struct regs *r) {
   printf("Flags %x Stack %x:%x ", r->eflags, r->ss, r->useresp);
   unsigned int cr2;
   asm volatile("mov %%cr2, %0": "=r"(cr2));
-  printf("CR2: %x", cr2);
-  printf("Will now halt.");
+  printf("CR2: %x\n", cr2);
 #else
   vga_setcolor(vga_color(COLOR_BLACK, COLOR_LIGHT_RED));
-  printf("Kernel Panic: %s at %x\n", exceptions[in], r->eip);
+  printf("%s at %x\n", exceptions[in], r->eip);
 #endif
+  end_task(cur_ctx);
+  vga_setcolor(vga_color(COLOR_LIGHT_GREY, COLOR_BLACK));
+  asm volatile ("sti");
   for(;;);
 }
 

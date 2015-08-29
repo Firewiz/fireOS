@@ -45,6 +45,11 @@ sys_read:
 	mov eax, 9
 	mov edx, 3
 	jmp i80
+global sys_fork
+sys_fork:
+	mov eax, 10
+	mov edx, 0
+	jmp i80
 i80:
 	mov ecx, esp
 	int 0x80

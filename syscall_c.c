@@ -163,6 +163,10 @@ int handle_sysread(unsigned int fd, char *buf, unsigned int count) {
   return read;
 }
 
+unsigned int handle_sysfork() {
+  return fork_task();
+}
+
 unsigned int do_syscall(int syscall, ...) {
   unsigned int fd, count;
   unsigned int flags;
@@ -197,6 +201,9 @@ unsigned int do_syscall(int syscall, ...) {
     break;
   case 9:
     r = handle_sysread(__builtin_va_arg(vl, unsigned int), (char *) __builtin_va_arg(vl, unsigned int), __builtin_va_arg(vl, unsigned int));
+    break;
+  case 10:
+    r = handle_sysfork();
     break;
   }
   return r;

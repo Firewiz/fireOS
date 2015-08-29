@@ -6,7 +6,7 @@ AS=nasm
 CFLAGS=-nostdlib -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -g -I./include/
 ASFLAGS=-felf32 -F stabs -g
 
-OBJS=src/crt0.o src/stdio.o src/string.o src/syscall.o src/stdlib.o
+OBJS=src/crt0.o src/stdio.o src/string.o src/syscall.o src/stdlib.o src/unistd.o
 LIB=libc.a
 
 all:$(LIB)

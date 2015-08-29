@@ -65,6 +65,8 @@ taskid_t create_task() {
   bzero((void *) tasks[i], sizeof(struct task));
   tasks[i]->state = malloc(sizeof(struct regs));
   bzero(tasks[i]->state, sizeof(struct regs));
+  tasks[i]->syscall_state = malloc(sizeof(struct regs));
+  bzero(tasks[i]->syscall_state, sizeof(struct regs));
   tasks[i]->state->gs = tasks[i]->state->fs
     = tasks[i]->state->es
     = tasks[i]->state->ds
@@ -77,6 +79,7 @@ taskid_t create_task() {
   tasks[i]->pages = 0;
   tasks[i]->fds = 0;
   tasks[i]->active = 0;
+  tasks[i]->usermode = 1;
   int umsize = user_offset - user_memptr;
   void *mem = malloc(umsize);
   memcpy(mem, (void *) user_memptr, umsize);
@@ -102,10 +105,9 @@ void run_task(taskid_t id) {
 }
 
 void load_task_vm(taskid_t id) {
+  if(tasks[id] == 0) return;
   struct page_list *p = tasks[id]->pages;
   while(p) {
-    if(is_present(p->vaddr))
-      unmap_page(p->vaddr);
     mapped_page(p->vaddr, p->paddr, 1);
     p = p->next;
   }
@@ -147,16 +149,18 @@ void free_page_list(struct page_list *l) {
   free(l);
 }
 
-struct fd_list *dup_fd_list(struct fd_list *l, taskid_t id) {
+struct fd_list *dup_fd_list(struct fd_list *l) {
   if(l == 0) return 0;
   struct fd_list *r = malloc_user(sizeof(struct fd_list), 1);
+  memcpy(r, l, sizeof(struct fd_list));
   r->next = dup_fd_list(l->next);
   return r;
 }
 
-struct page_list *dup_page_list(struct page_list *l, taskid_t id) {
+struct page_list *dup_page_list(struct page_list *l) {
   if(l == 0) return 0;
-  struct page_list *r = malloc_user(sizeof(struct page_list), 1);
+  struct page_list *r = malloc(sizeof(struct page_list));
+  memcpy(r, l, sizeof(struct fd_list));
   r->next = dup_page_list(l->next);
   return r;
 }
@@ -170,25 +174,46 @@ void end_task(taskid_t id) {
   tasks[id] = 0;
 }
 
+void dump_regs(struct regs *r) {
+  printf("PEX %x  LS %x\n", r->preserve_eax, r->load_stack);
+  printf(" GS %x  FS %x  ES %x  DS %x\n", r->gs, r->fs, r->es, r->ds);
+  printf("EDI %x ESI %x EBP %x ESP %x\n", r->edi, r->esi, r->ebp, r->esp);
+  printf("EBX %x EDX %x ECX %x EAX %x\n", r->ebx, r->edx, r->ecx, r->eax);
+  printf(" IN %x  EC %x\nEIP %x  CS %x FGS %x UEP %x  SS %x\n", r->int_no, r->err_code, r->eip, r->cs, r->eflags, r->useresp, r->ss);
+}
+
 void next_ctx(int no, struct regs *r) {
   if(ctx_lock) return;
   ctx_lock = 1;
   int new_ctx = cur_ctx;
   if(tasks[cur_ctx] != 0) {// task ended since last timeslice
-    memcpy(tasks[cur_ctx]->state, r, sizeof(struct regs));
+    if(r->cs == 0x08) {
+      memcpy(tasks[cur_ctx]->syscall_state, r, sizeof(struct regs));
+      tasks[cur_ctx]->usermode = 0;
+    } else {
+      memcpy(tasks[cur_ctx]->state, r, sizeof(struct regs));
+      tasks[cur_ctx]->usermode = 1;
+    }
   }
   do {
     new_ctx++;
     if(new_ctx > 65535) new_ctx = 1;
   } while(tasks[new_ctx] == 0 || tasks[new_ctx]->active != 1);
   if(new_ctx == cur_ctx) return;
-  //  tasks[new_ctx]->state->useresp = tasks[new_ctx]->state->esp;
-#ifdef DEBUG_MT_LOUD
-  printd("%x %x Loaded task %d esp %x eip %x\n", &tasks[new_ctx], tasks[new_ctx]->active,
-  	 new_ctx, tasks[new_ctx]->state->esp, tasks[new_ctx]->state->eip);
-#endif
-  tasks[new_ctx]->state->load_stack = 1;
-  set_kernel_stack((unsigned int) tasks[new_ctx]->syscall_stack);
+
+  if(tasks[new_ctx]->state_copy) {
+    memcpy(tasks[new_ctx]->state, tasks[tasks[new_ctx]->state_copy]->state, sizeof(struct regs));
+    memcpy(tasks[new_ctx]->syscall_state, tasks[tasks[new_ctx]->state_copy]->syscall_state, sizeof(struct regs));
+    tasks[new_ctx]->state_copy = 0;
+  }
+
+  tasks[new_ctx]->swapped = 1;
+  if(tasks[new_ctx]->state->cs != 0x08) {
+    set_kernel_stack((unsigned int) tasks[new_ctx]->syscall_stack);
+    tasks[new_ctx]->state->load_stack = 1;
+  }
+  else
+    set_kernel_stack((unsigned int) tasks[new_ctx]->syscall_state->esp);
   struct page_list *p = tasks[new_ctx]->pages;
   while(p) {
     if(is_present(p->vaddr))
@@ -196,22 +221,69 @@ void next_ctx(int no, struct regs *r) {
     mapped_page(p->vaddr, p->paddr, 1);
     p = p->next;
   }
-  memcpy(r, tasks[new_ctx]->state, sizeof(struct regs));
+  if(tasks[new_ctx]->usermode)
+    memcpy(r, tasks[new_ctx]->state, sizeof(struct regs));
+  else
+    memcpy(r, tasks[new_ctx]->syscall_state, sizeof(struct regs));
+#ifdef DEBUG_MT_LOUD
+  printd("Loaded task %d\n", new_ctx);
+  dump_regs(r);
+#endif
   cur_ctx = new_ctx;
   ctx_lock = 0;
 }
 
 taskid_t fork_task() {
-  int i;
+  int i, orig_id = cur_ctx;
   for(i = 1; i < 65535; i++) {
     if(tasks[i] == 0) break;
   }
+  printf("Forking task %d to child %d\n", cur_ctx, i);
   tasks[i] = malloc(sizeof(struct task));
-  memcpy(tasks[i], tasks[cur_ctx], sizeof(struct task));
+  printf("Copying task data... ");
+  memcpy((void *) tasks[i], (void *) tasks[cur_ctx], sizeof(struct task));
+  printf("done\n");
   tasks[i]->active = 0;
   tasks[i]->state = malloc(sizeof(struct regs));
+  tasks[i]->syscall_state = malloc(sizeof(struct regs));
+  printf("Copying state data... ");
   memcpy(tasks[i]->state, tasks[cur_ctx]->state, sizeof(struct regs));
-  struct page_list *p = tasks[cur_ctx]->pages;
-  void *tmp_page = malloc(4096);
-  // To be continued.
+  memcpy(tasks[i]->syscall_state, tasks[cur_ctx]->syscall_state, sizeof(struct regs));
+  printf("done\n");
+  struct page_list *p, *orig = dup_page_list(tasks[cur_ctx]->pages);
+  p = dup_page_list(tasks[cur_ctx]->pages);
+  unsigned int tp_addr;
+  printf("Reallocating pages... \n");
+  while(p) {
+    // Create a temporary page, remap the new page to point to the
+    // physical memory of the temp page. Don't unmap the temp page
+    // because of frameset issues.
+    tp_addr = nonidentity_page(0xF0000, 0);
+    memcpy((void *) 0xF0000000, (void *) p->vaddr, 4096);
+    mapped_page(p->vaddr, tp_addr, 1);
+    p->paddr = tp_addr;
+    p = p->next;
+  }
+  printf("done\n");
+  // At this point, we're using the memory of the child process.
+  p = orig;
+  printf("Restoring page map...\n");
+  while(p) {
+    mapped_page(p->vaddr, p->paddr, 1);
+    p = p->next;
+  }
+  free_page_list(p);
+  printf("done\n");
+  tasks[i]->state_copy = cur_ctx;
+  tasks[i]->swapped = 0;
+  tasks[i]->active = 1;
+  tasks[cur_ctx]->swapped = 0;
+  // The task splits here.
+  // Now, we need to busy-wait until the new task is loaded and the
+  // state is copied properly.
+  while(tasks[cur_ctx]->swapped == 0) ;
+  printf("Forked (%d).\n", cur_ctx);
+  //memcpy(tasks[i]->state, tasks[cur_ctx]->state, sizeof(struct regs));
+  if(cur_ctx == i) return 0;
+  return i;
 }

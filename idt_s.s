@@ -72,8 +72,8 @@ isr_common_stub:
 	pop edx ; preserve_eax
 	
 	pop eax ; load_stack
-	test eax, eax
-	jne iret_load_stack
+;	test eax, eax
+;	jne iret_load_stack
 cleanup:
 	
 	pop gs
