@@ -9,9 +9,7 @@
 #include "malloc.h"
 #include "stdlib.h"
 #include "disk.h"
-#include "syscall.h"
 #include "paging.h"
-#include "mt.h"
 #include "timer.h"
 #include "shell.h"
 #include "gdt.h"
@@ -42,8 +40,8 @@ void kernel_main() {
   install_exc_handlers();
   printf("Setting up IRQs...\n");
   init_irq();
-  printf("Registering syscall interface...\n");
-  register_syscall(0x80);
+  //  printf("Registering syscall interface...\n");
+  //  register_syscall(0x80);
   vga_write("Welcome to ");
   vga_setcolor(vga_color(COLOR_RED, COLOR_BLACK));
   vga_write("Fire");
@@ -55,7 +53,7 @@ void kernel_main() {
   vga_write("Keyboard initialized\n");
   timer_phase(100);
   init_timer();
-  init_mt();
+  //  init_mt();
   vga_setcurs(0, 24);
   shell_main();
 }

@@ -48,7 +48,7 @@ void shell_main() {
   printf("Files loaded.\n");
   free(rdir);
   vga_write("Starting MT.\n");
-  run_task(tid1);
+  //  run_task(tid1);
   asm volatile ("sti");
 }
 

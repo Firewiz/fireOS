@@ -2,7 +2,6 @@
 #include "idt.h"
 #include "vga.h"
 #include "printf.h"
-#include "mt.h"
 
 char *exceptions[] = {
   "Division by zero",
@@ -34,7 +33,7 @@ void handle_exception(int in, struct regs *r) {
   vga_setcolor(vga_color(COLOR_LIGHT_RED, COLOR_BLACK));
   vga_write("Exception: ");
   vga_write(exceptions[in]);
-  printf(" (thread #%d)\n", cur_ctx);
+  //  printf(" (thread #%d)\n", cur_ctx);
   if(r->load_stack) printf("Stack loaded\n");
   printf("Error code: %x\n", r->err_code);
   printf("Segments: GS %x FS %x ES %x DS %x\n", r->gs, r->fs, r->es, r->ds);
@@ -48,7 +47,7 @@ void handle_exception(int in, struct regs *r) {
   vga_setcolor(vga_color(COLOR_BLACK, COLOR_LIGHT_RED));
   printf("%s at %x\n", exceptions[in], r->eip);
 #endif
-  end_task(cur_ctx);
+  //  end_task(cur_ctx);
   vga_setcolor(vga_color(COLOR_LIGHT_GREY, COLOR_BLACK));
   asm volatile ("sti");
   for(;;);
