@@ -3,6 +3,7 @@
 #include "printf.h"
 #include "stdlib.h"
 #include "config.h"
+#include "static.h"
 
 #ifdef DEBUG_MALLOC
 #define printd(f, ...) printf(f, __VA_ARGS__)
@@ -11,7 +12,7 @@
 #endif
 
 unsigned char *malloc_arena_kernel = (unsigned char *)0x2000000;
-unsigned char *malloc_arena_user =   (unsigned char *)0x4000000;
+unsigned char *malloc_arena_user =   (unsigned char *)0x80000000;
 
 #define VADDR_TO_PAGE(a) (((unsigned int) (a)) / 0x1000)
 
@@ -65,7 +66,7 @@ void *alloc_new_block(struct malloc_header *arena_head, unsigned int size, int u
   }
   // at this point, p is the start of *our* header. if necessary, the
   // previous blocks' next pointer has been set.
-  //  allocate_pages(p, size + sizeof(struct malloc_header), user, cur_ctx);
+  allocate_pages(p, size + sizeof(struct malloc_header), user, current_pid);
   p->magic = MALLOC_MAGIC;
   p->arena_head = arena_head;
   p->btype = TYPE_USED;

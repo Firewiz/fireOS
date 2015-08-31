@@ -18,4 +18,8 @@
 #define GDT_OFFSET (GDT_ENTRIES * sizeof(struct gdt_entry_bits))
 #define TSS_BASE (GDT_BASE + GDT_OFFSET)
 #define TSS_OFFSET (sizeof(struct tss_entry))
+
+#define MALLOC_ARENA_KERNEL_BASE 0x02000000
+#define MALLOC_ARENA_USER_BASE   0x80000000
+#define USER_STACK               0xF0000000
 #endif
