@@ -23,7 +23,7 @@ struct process_t {
   proc_page_list *pages;
   unsigned char *stack;
   unsigned char *kernel_stack;
-  unsigned int proc_flags;
+  unsigned int flags;
 };
 
 typedef struct process_t process;

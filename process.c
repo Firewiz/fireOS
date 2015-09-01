@@ -62,10 +62,11 @@ void init_mt() {
   allocate_pages((unsigned int) init->stack, KERNEL_STACK_SIZE, 1, 0);
   init->state->gs = init->state->es = init->state->fs = init->state->ds = init->state->ss = 0x23;
   init->state->ebp = init->state->esp = init->state->useresp = (unsigned int) init->stack;
+  init->state->cs = 0x18;
 }
 
 void run_init(void (*entry)()) {
-  init->state->cs = 0x18;
+  process *init = get_proc(0);
   init->state->eip = (unsigned int) entry;
   init->flags |= PF_ACTIVE;
 }
@@ -129,7 +130,7 @@ pid_t fork(void) {
   new_pages = new_proc->pages;
   while(new_pages) {
     new_pages->physical = nonidentity_page(FAKE_PAGE_BASE, 1); // FAKE_PAGE_BASE is now paged in
-    memcpy(FAKE_PAGE_BASE, new_pages->virtual, 0x1000);        // our data is copied
+    memcpy((void *) FAKE_PAGE_BASE, (void *) new_pages->virtual, 0x1000);        // our data is copied
     mapped_page(new_pages->virtual, new_pages->physical, 1);   // and the new page is set.
   }
   // We're now using the page table of the child process. However,
@@ -143,21 +144,24 @@ pid_t fork(void) {
   // return value.
   new_proc->state->eax = 0;
   old_proc->state->eax = new_pid;
+  return 0; // return value is discarded, but we have it here anyways
+	    // because the compiler ~~is stupid~~ doesn't know better.
 }
 
 void next_ctx(struct regs *r) {
   process_list *pl = plist;
-  int new_pid = 0;
+  int new_pid = -1;
   // Assumptions: Process id 0 always exists. (it's init, so if it's
   // gone we have other problems). The process list is in sorted
   // order. (if it isn't, fork() is whacked)
   while(pl->next) {
-    if(pl->p->id > current_pid && pl->p->proc_flags & PF_ACTIVE) new_pid = pl->p->id;
+    if(pl->p->id > current_pid && pl->p->flags & PF_ACTIVE) new_pid = pl->p->id;
     pl = pl->next;
   }
+  if(new_pid == -1) return;
   process *old = get_proc(current_pid);
   process *new = get_proc(new_pid);
   memcpy(old->state, r, sizeof(struct regs));
   memcpy(r, new->state, sizeof(struct regs));
-  set_kernel_stack(new->kernel_stack);
+  set_kernel_stack((unsigned int) new->kernel_stack);
 }

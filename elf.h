@@ -53,6 +53,8 @@ struct program_header {
   unsigned int align;
 } __attribute__ ((packed));
 
+#include "process.h"
+
 unsigned int load_elf(unsigned char *file, pid_t owner);
 
 #endif

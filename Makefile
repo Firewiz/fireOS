@@ -5,7 +5,7 @@ AS=nasm
 CFLAGS=-ffreestanding -nostdlib -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -g
 ASFLAGS=-felf32 -F stabs -g
 
-OBJS=kernel.o vga.o stdlib.o asmintr.o idt_c.o inthandle.o irq.o keyboard.o disk.o fat.o printf.o malloc.o boot.o idt_s.o paging.o timer.o shell.o elf.o gdt_c.o gdt_s.o process.o
+OBJS=kernel.o vga.o stdlib.o asmintr.o idt_c.o inthandle.o irq.o keyboard.o disk.o fat.o printf.o malloc.o boot.o idt_s.o paging.o timer.o shell.o elf.o gdt_c.o gdt_s.o process.o syscall.o
 PROG=fireos.bin
 
 all:version.h $(PROG) libc modules

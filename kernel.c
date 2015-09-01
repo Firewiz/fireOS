@@ -51,9 +51,12 @@ void kernel_main() {
   vga_write(" version " VERSION "\n");
   init_keyboard();
   vga_write("Keyboard initialized\n");
+  init_syscall(0x80);
+  printf("Initializing init...\n");
+  init_mt();
+  printf("Initializing timer...\n");
   timer_phase(100);
   init_timer();
-  //  init_mt();
   vga_setcurs(0, 24);
   shell_main();
 }

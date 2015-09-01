@@ -27,7 +27,7 @@ unsigned int load_elf(unsigned char *file, pid_t owner) {
     printd("Read header, section type %d, data offset %x, VM location %x, file size %d, mem size %d.\n", phead->stype, phead->p_offset, phead->p_vaddr, phead->p_filesz, phead->p_memsz);
     printd("Attempting to load section...\n");
     // map VM pages
-    allocate_pages(phead->p_vaddr, phead->p_memsz, 1, ownder);
+    allocate_pages(phead->p_vaddr, phead->p_memsz, 1, owner);
     // load section
     memcpy((void *)phead->p_vaddr, file + phead->p_offset, phead->p_filesz);
     printd("Section loaded.\n");
