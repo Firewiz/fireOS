@@ -46,7 +46,7 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
   }
 }
 
-void init_mt(void (*entry)()) {
+void init_mt() {
   plist = malloc(sizeof(process_list));
   current_pid = 0;
   plist->next = plist->prev = 0;
@@ -62,10 +62,14 @@ void init_mt(void (*entry)()) {
   allocate_pages((unsigned int) init->stack, KERNEL_STACK_SIZE, 1, 0);
   init->state->gs = init->state->es = init->state->fs = init->state->ds = init->state->ss = 0x23;
   init->state->ebp = init->state->esp = init->state->useresp = (unsigned int) init->stack;
+}
+
+void run_init(void (*entry)()) {
   init->state->cs = 0x18;
   init->state->eip = (unsigned int) entry;
   init->flags |= PF_ACTIVE;
 }
+
 
 pid_t fork(void) {
   pid_t new_pid;
@@ -134,7 +138,11 @@ pid_t fork(void) {
   // affecting the child process _only_. Unfortunately, this includes
   // important things such as returning from this function.
 
-  // This is a problem.
+  // This is not a problem, because fork() runs on a separate
+  // stack. We just need to modify the new process's state to set our
+  // return value.
+  new_proc->state->eax = 0;
+  old_proc->state->eax = new_pid;
 }
 
 void next_ctx(struct regs *r) {

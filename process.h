@@ -42,7 +42,8 @@ extern volatile pid_t current_pid;
 
 process *get_proc(pid_t id);
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner);
-void init_mt(void (*entry)());
+void init_mt();
+void run_init(void (*entry)());
 pid_t fork(void);
 void next_ctx(struct regs *r);
 #endif

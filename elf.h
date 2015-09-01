@@ -53,6 +53,6 @@ struct program_header {
   unsigned int align;
 } __attribute__ ((packed));
 
-int load_elf(unsigned char *);
+unsigned int load_elf(unsigned char *file, pid_t owner);
 
 #endif

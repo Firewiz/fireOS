@@ -44,11 +44,12 @@ void shell_main() {
     read_sector(file + (i * 512), 0, base_sector + i);
   }
   printf("File read.\nLoading ELF file...\n");
-  int tid1 = load_elf(file);
+  unsigned int entry = load_elf(file);
   printf("Files loaded.\n");
   free(rdir);
   vga_write("Starting MT.\n");
-  //  run_task(tid1);
+  init_mt();
+  run_init(entry);
   asm volatile ("sti");
 }
 
