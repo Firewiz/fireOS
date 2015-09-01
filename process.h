@@ -2,6 +2,7 @@
 #define PROCESS_H
 
 typedef unsigned short pid_t;
+#define PID_MAX 65535
 
 #include "idt.h"
 
@@ -12,13 +13,17 @@ struct proc_page_list_t {
 
 typedef struct proc_page_list_t proc_page_list;
 
-#define PROCESS_STACK_SIZE 0x1000
+#define PROCESS_STACK_SIZE 0x10000
+#define KERNEL_STACK_SIZE 0x10000
+#define PF_ACTIVE 0x01
 
 struct process_t {
   pid_t id;
   struct regs *state;
   proc_page_list *pages;
-  unsigned char stack[PROCESS_STACK_SIZE];
+  unsigned char *stack;
+  unsigned char *kernel_stack;
+  unsigned int proc_flags;
 };
 
 typedef struct process_t process;
@@ -37,7 +42,7 @@ extern volatile pid_t current_pid;
 
 process *get_proc(pid_t id);
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner);
-void init_mt();
-pid_t create_process();
-
+void init_mt(void (*entry)());
+pid_t fork(void);
+void next_ctx(struct regs *r);
 #endif

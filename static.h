@@ -20,6 +20,8 @@
 #define TSS_OFFSET (sizeof(struct tss_entry))
 
 #define MALLOC_ARENA_KERNEL_BASE 0x02000000
-#define MALLOC_ARENA_USER_BASE   0x80000000
+#define FAKE_PAGE_BASE           0x80000000
+#define MALLOC_ARENA_USER_BASE   0x90000000
 #define USER_STACK               0xF0000000
+#define KERNEL_STACK             0xF8000000
 #endif

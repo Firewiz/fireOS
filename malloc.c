@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "config.h"
 #include "static.h"
+#include "process.h"
 
 #ifdef DEBUG_MALLOC
 #define printd(f, ...) printf(f, __VA_ARGS__)
@@ -66,7 +67,7 @@ void *alloc_new_block(struct malloc_header *arena_head, unsigned int size, int u
   }
   // at this point, p is the start of *our* header. if necessary, the
   // previous blocks' next pointer has been set.
-  allocate_pages(p, size + sizeof(struct malloc_header), user, current_pid);
+  allocate_pages((unsigned int) p, size + sizeof(struct malloc_header), user, current_pid);
   p->magic = MALLOC_MAGIC;
   p->arena_head = arena_head;
   p->btype = TYPE_USED;

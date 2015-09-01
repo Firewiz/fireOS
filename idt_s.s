@@ -68,97 +68,16 @@ isr_common_stub:
 	call eax
 	mov ecx, eax
 	pop eax
-
-	pop edx ; preserve_eax
-	
-	pop eax ; load_stack
-;	test eax, eax
-;	jne iret_load_stack
-cleanup:
 	
 	pop gs
 	pop fs
 	pop es
 	pop ds
-; at this point, we want to move ECX to EAX if EDX != 0... *after* the
-; POPA.
-; to do this, we'll fake the stack frame.
-	test edx, edx
-	je pop_frame
-; eax is at esp+28
-	mov [esp + 28], ecx
-pop_frame:
-	popa
-	
-;	pop edi
-;	pop esi
-;	pop ebp
-;       add esp, 4 
-;	pop ebx
-;	pop edx
-;	pop ecx
-;	pop eax
-	
 	add esp, 8
 	sti
 	or WORD [esp + 8], 0x200
 	iret
 
-iret_load_stack:
-;; Current stack: 0 gs 4 fs 8 es 12 ds 16 edi 20 esi 24 ebp 28 esp 32
-;; ebx 36 edx 40 ecx 44 eax 48 in 52 ec 56 eip 60 cs 64 eflags 68
-;; useresp 72 ss
-
-;; We need to move that stack to useresp.
-	mov eax, [esp+68]
-;; Now that useresp is in EAX, we can move the rest of the registers
-;; over.
-	pop ebx
-	mov [eax-72], ebx ; gs
-	pop ebx
-	mov [eax-68], ebx ; fs
-	pop ebx
-	mov [eax-64], ebx ; es
-	pop ebx
-	mov [eax-60], ebx ; ds
-	pop ebx
-	mov [eax-56], ebx ; edi
-	pop ebx
-	mov [eax-52], ebx ; esi
-	pop ebx
-	mov [eax-48], ebx ; ebp
-	pop ebx
-	mov [eax-44], ebx ; esp
-	pop ebx
-	mov [eax-40], ebx ; ebx
-	pop ebx
-	mov [eax-36], ebx ; edx
-	pop ebx
-	mov [eax-32], ebx ; ecx
-	pop ebx
-	mov [eax-28], ebx ; eax
-	pop ebx
-	mov [eax-24], ebx ; inum
-	pop ebx
-	mov [eax-20], ebx ; errcode
-	pop ebx
-	mov [eax-16], ebx ; eip
-	pop ebx
-	mov [eax-12], ebx ; cs
-	pop ebx
-	mov [eax-8], ebx ; eflags
-	pop ebx
-	mov [eax-4], ebx ; useresp
-	pop ebx
-	mov [eax], ebx ; ss
-
-; load new stack
-	sub eax, 72
-	mov esp, eax
-	jmp cleanup
-	
-	
-	
 global idt
 idt:
 resb 256*8
