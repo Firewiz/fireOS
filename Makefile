@@ -5,7 +5,7 @@ AS=nasm
 CFLAGS=-ffreestanding -nostdlib -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -g
 ASFLAGS=-felf32 -F stabs -g
 
-OBJS=kernel.o vga.o stdlib.o asmintr.o idt_c.o inthandle.o irq.o keyboard.o disk.o fat.o printf.o malloc.o boot.o idt_s.o paging.o timer.o shell.o elf.o gdt_c.o gdt_s.o process.o syscall.o
+OBJS=kernel.o vga.o stdlib.o asmintr.o idt_c.o inthandle.o irq.o keyboard.o disk.o fat.o printf.o malloc.o boot.o idt_s.o paging.o timer.o shell.o elf.o gdt_c.o gdt_s.o process.o syscall.o syscall_handlers.o
 PROG=fireos.bin
 
 all:version.h $(PROG) libc modules
@@ -21,12 +21,12 @@ clean:
 	cd modules ; make clean
 libc: build_libc install_libc
 build_libc:
-	cd libc ; make
+	+cd libc ; make
 install_libc:
 
 modules: build_modules install_modules
 build_modules:
-	cd modules ; make
+	+cd modules ; make
 install_modules:
 	cp modules/*.exe fs_mount/
 	sync

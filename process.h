@@ -13,6 +13,18 @@ struct proc_page_list_t {
 
 typedef struct proc_page_list_t proc_page_list;
 
+#define FD_FLAG_RD  0x01
+#define FD_FLAG_WR  0x02
+#define FD_FLAG_TTY 0x03
+
+struct proc_fd_list_t {
+  struct proc_fd_list_t *next;
+  int fd;
+  unsigned int fd_flags;
+};
+
+typedef struct proc_fd_list_t proc_fd_list;
+
 #define PROCESS_STACK_SIZE 0x10000
 #define KERNEL_STACK_SIZE 0x10000
 #define PF_ACTIVE 0x01
@@ -21,6 +33,7 @@ struct process_t {
   pid_t id;
   struct regs *state;
   proc_page_list *pages;
+  proc_fd_list *fds;
   unsigned char *stack;
   unsigned char *kernel_stack;
   unsigned int flags;

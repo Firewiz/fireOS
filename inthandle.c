@@ -49,7 +49,8 @@ void handle_exception(int in, struct regs *r) {
 #endif
   //  end_task(cur_ctx);
   vga_setcolor(vga_color(COLOR_LIGHT_GREY, COLOR_BLACK));
-  asm volatile ("sti");
+  asm volatile ("hlt");
+  
   for(;;);
 }
 

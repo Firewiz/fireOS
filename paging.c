@@ -84,12 +84,17 @@ unsigned int nonidentity_page(unsigned int page_index, int user) {
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {
+  printf("Mapping page %x to %x\n", page_index, phy_addr);
   if(user) {
-    ptables[page_index] = phy_addr * 0x1000 | (PRESENT | RW | USER);
+    ptables[page_index] = (phy_addr * 0x1000) | (PRESENT | RW | USER);
   } else {
-    ptables[page_index] = phy_addr * 0x1000 | (PRESENT | RW);
+    ptables[page_index] = (phy_addr * 0x1000) | (PRESENT | RW);
   }
   set_frame(phy_addr);
+}
+
+unsigned int get_mapping(unsigned int virt_addr) {
+  return (ptables[virt_addr / 0x1000] & ~0xFFF) | (virt_addr & 0xFFF);
 }
 
 void unmap_page(unsigned int page_index) {
@@ -99,8 +104,4 @@ void unmap_page(unsigned int page_index) {
 
 int is_present(unsigned int page_index) {
   return ptables[page_index] & PRESENT;
-}
-
-unsigned int get_mapping(unsigned int page_index) {
-  return ptables[page_index] / 0x1000;
 }

@@ -13,9 +13,11 @@
 #include "timer.h"
 #include "shell.h"
 #include "gdt.h"
+#include "syscall_handlers.h"
 
 void kernel_main() {
   vga_init();
+  printf("%x\n", STATIC_END);
   printf("Initializing paging...\n");
   setup_paging();
   unsigned int i;
@@ -40,8 +42,6 @@ void kernel_main() {
   install_exc_handlers();
   printf("Setting up IRQs...\n");
   init_irq();
-  //  printf("Registering syscall interface...\n");
-  //  register_syscall(0x80);
   vga_write("Welcome to ");
   vga_setcolor(vga_color(COLOR_RED, COLOR_BLACK));
   vga_write("Fire");
@@ -52,6 +52,7 @@ void kernel_main() {
   init_keyboard();
   vga_write("Keyboard initialized\n");
   init_syscall(0x80);
+  register_syscall_handlers();
   printf("Initializing init...\n");
   init_mt();
   printf("Initializing timer...\n");

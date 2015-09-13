@@ -1,6 +1,7 @@
 #include "vga.h"
 #include "stdlib.h"
 #include "asmintr.h"
+#include "static.h"
 
 volatile unsigned char vga_row, vga_col;
 unsigned char vga_color;

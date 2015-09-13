@@ -6,8 +6,8 @@ global _start
 _start:
 	call _setup_stdio
 	call main
-	push dword 0
 	call sys_exit
-;	int 0x81
+;	mov eax, 1
+;	int 0x80
 hang:
 	jmp hang

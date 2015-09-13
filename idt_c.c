@@ -11,7 +11,7 @@ void int_handler(struct regs *r) {
   if(int_handlers[r->int_no]) {
     int_handlers[r->int_no](r->int_no, r);
   } else {
-    printf("Unknown interrupt (%d)\n", r->int_no);
+    printf("Unknown interrupt (%x)\n", r->int_no);
     //vga_write("Unknown interrupt\n");
   }
 }

@@ -55,8 +55,6 @@ isr_common_stub:
 	push es
 	push fs
 	push gs
-	push dword 0 ; load_stack bit
-	push dword 0 ; preserve_eax bit
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
@@ -73,6 +71,7 @@ isr_common_stub:
 	pop fs
 	pop es
 	pop ds
+	popa
 	add esp, 8
 	sti
 	or WORD [esp + 8], 0x200

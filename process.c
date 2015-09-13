@@ -6,6 +6,7 @@
 #include "paging.h"
 #include "stdlib.h"
 #include "static.h"
+#include "printf.h"
 
 // plist is sorted in ascending pid order
 process_list *plist;
@@ -14,61 +15,75 @@ volatile pid_t current_pid;
 process *get_proc(pid_t id) {
   if(plist == 0) return 0;
   process_list *p;
-  for(p = plist; p->next; p = p->next) {
+  for(p = plist; p; p = p->next) {
     if(p->p->id == id) return p->p;
   }
   return 0;
 }
 
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner) {
+  printf("AP %x %x %d %d\n", base, offset, user, owner);
   unsigned int i;
   unsigned int phy;
   process *proc = get_proc(owner);
   proc_page_list *pl = proc->pages;
   for(i = 0; i < offset; i += 0x1000) {
     if(!is_present((i + base) / 0x1000)) {
-      phy = nonidentity_page(i + base, user);
+      printf("paging in %x\n", (i + base) / 0x1000);
+      phy = nonidentity_page((i + base) / 0x1000, user);
+      printf("paged\n");
       // only alter the page list if these were user pages
-      if(user) {
-	if(proc->pages == 0) {
-	  proc->pages = malloc(sizeof(proc_page_list));
-	  pl = proc->pages;
-	} else {
-	  while(pl->next) pl = pl->next;
-	  pl->next = malloc(sizeof(proc_page_list));
-	  pl = pl->next;
+      if(proc != 0) {
+	if(user) {
+	  if(proc->pages == 0) {
+	    proc->pages = malloc(sizeof(proc_page_list));
+	    pl = proc->pages;
+	  } else {
+	    while(pl->next) pl = pl->next;
+	    pl->next = malloc(sizeof(proc_page_list));
+	    pl = pl->next;
+	  }
 	}
+	pl->physical = phy;
+	pl->virtual = (i + base) / 0x1000;
+	pl->next = 0;
       }
-      pl->physical = phy;
-      pl->virtual = (i + base) / 0x1000;
-      pl->next = 0;
     }
   }
+  printf("AP done\n");
 }
 
 void init_mt() {
+  printf("In init_mt().\n");
   plist = malloc(sizeof(process_list));
+  printf("Allocated process list\n");
   current_pid = 0;
   plist->next = plist->prev = 0;
   process *init = malloc(sizeof(process));
+  printf("Allocated init.\n");
   plist->p = init;
   init->id=0;
   init->state = malloc(sizeof(struct regs));
   bzero(init->state, sizeof(struct regs));
+  printf("Allocated state buffer.\n");
   init->pages = 0;
+  init->fds = 0;
   init->stack = (unsigned char *) USER_STACK + PROCESS_STACK_SIZE;
-  allocate_pages((unsigned int) init->stack, PROCESS_STACK_SIZE, 1, 0);
+  printf("Allocating usermode stack...\n");
+  allocate_pages((unsigned int) USER_STACK, PROCESS_STACK_SIZE, 1, 0);
+  printf("Allocated usermode stack.\n");
   init->kernel_stack = (unsigned char *) KERNEL_STACK + KERNEL_STACK_SIZE;
-  allocate_pages((unsigned int) init->stack, KERNEL_STACK_SIZE, 1, 0);
+  allocate_pages((unsigned int) KERNEL_STACK, KERNEL_STACK_SIZE, 1, 0);
   init->state->gs = init->state->es = init->state->fs = init->state->ds = init->state->ss = 0x23;
   init->state->ebp = init->state->esp = init->state->useresp = (unsigned int) init->stack;
-  init->state->cs = 0x18;
+  init->state->cs = 0x1b;
 }
 
 void run_init(void (*entry)()) {
   process *init = get_proc(0);
   init->state->eip = (unsigned int) entry;
   init->flags |= PF_ACTIVE;
+  printf("INIT active!\n");
 }
 
 
@@ -99,6 +114,22 @@ pid_t fork(void) {
   // list entry, inserted in the right spot.
   process *old_proc = get_proc(current_pid);
   process *new_proc = malloc(sizeof(process));
+  // Copy over the file descriptor list
+  proc_fd_list *ofd = old_proc->fds;
+  if(ofd) {
+    proc_fd_list *nfd = malloc(sizeof(proc_fd_list));
+    new_proc->fds = nfd;
+    while(ofd) {
+      nfd->fd = ofd->fd;
+      nfd->fd_flags = ofd->fd_flags;
+      if(ofd->next) nfd->next = malloc(sizeof(proc_fd_list));
+      else nfd->next = 0;
+      ofd = ofd->next;
+      nfd = nfd->next;
+    }
+  } else {
+    new_proc->fds = 0;
+  }
   memcpy(new_proc, old_proc, sizeof(process));
   // fork() must be called by system call. Therefore, we have an
   // up-to-date state, and interrupts are disabled.
@@ -149,19 +180,29 @@ pid_t fork(void) {
 }
 
 void next_ctx(struct regs *r) {
+  //  printf("NCTX!\n");
   process_list *pl = plist;
   int new_pid = -1;
   // Assumptions: Process id 0 always exists. (it's init, so if it's
   // gone we have other problems). The process list is in sorted
   // order. (if it isn't, fork() is whacked)
-  while(pl->next) {
+  while(pl) {
     if(pl->p->id > current_pid && pl->p->flags & PF_ACTIVE) new_pid = pl->p->id;
     pl = pl->next;
   }
-  if(new_pid == -1) return;
-  process *old = get_proc(current_pid);
+  if(pl == 0) {
+    pl = plist;
+    while(pl) {
+      if(pl->p->flags & PF_ACTIVE) new_pid = pl->p->id;
+      pl = pl->next;
+    }
+  }
+  if(new_pid == -1) return; // There are no processes
   process *new = get_proc(new_pid);
-  memcpy(old->state, r, sizeof(struct regs));
+  if(r->cs != 0x08) {
+    process *old = get_proc(current_pid);
+    memcpy(old->state, r, sizeof(struct regs));
+  }
   memcpy(r, new->state, sizeof(struct regs));
   set_kernel_stack((unsigned int) new->kernel_stack);
 }

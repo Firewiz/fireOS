@@ -50,5 +50,7 @@ void shell_main() {
   vga_write("Starting MT.\n");
   run_init((void (*)()) entry);
   asm volatile ("sti");
+  for(;;);
+  printf("Interrupts enabled.\n");
 }
 
