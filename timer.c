@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "mt.h"
 #include "printf.h"
+#include "process.h"
 
 static volatile unsigned long ticks = 0;
 
@@ -20,8 +21,9 @@ void init_timer() {
 
 void timer_intr(int no, struct regs *r) {
   ticks++;
-  if(ticks % 2 == 0)
-    next_ctx(no, r);
+  if(ticks % 2 == 0) {
+    next_ctx(r);
+  }
 }
 
 void delay(unsigned long amount) {

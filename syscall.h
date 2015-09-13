@@ -1,10 +1,6 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
 
-void register_syscall(int errupt);
-unsigned int do_syscall(int sysno, ...);
-extern void handle_syscall();
-
-int syscall_interrupt;
-
+void init_syscall(int errupt);
+void install_syscall_handlers(void *handler, int id);
 #endif

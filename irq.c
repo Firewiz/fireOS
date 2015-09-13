@@ -1,6 +1,7 @@
 #include "irq.h"
 #include "idt.h"
 #include "asmintr.h"
+#include "stdlib.h"
 
 void (*irq_handlers[16])(int irq, struct regs *r);
 
@@ -8,7 +9,7 @@ void irq_common_handler(int inum, struct regs *r) {
   if(irq_handlers[inum - 32]) {
     irq_handlers[inum - 32](inum - 32, r);
   }
-  if(inum >= 40)
+  if(inum >= 40 && inum != 47)
     outb(0xA0, 0x20);
   outb(0x20, 0x20);
 }
@@ -18,6 +19,8 @@ void install_irq(void *handler, int gate) {
 }
 
 void init_irq() {
+  bzero(irq_handlers, sizeof(irq_handlers));
+  
   outb(0x20, 0x11);
   outb(0xA0, 0x11);
   outb(0x21, 0x20);
