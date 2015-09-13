@@ -1,7 +1,7 @@
 #include "syscall.h"
 #include "idt.h"
 
-void (*syscall_handers[256])(void *stack_base);
+void (*syscall_handlers[256])(void *stack_base);
 
 void install_syscall_handler(void *handler, int id) {
   syscall_handlers[id] = handler;

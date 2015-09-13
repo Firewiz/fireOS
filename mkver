@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-open VERSION, ">version.h";
+open VERSION, ">$ARGV[0]";
 open VTXT, "version.txt";
 
 $gitver = `git rev-parse --short HEAD`;

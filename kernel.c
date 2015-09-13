@@ -17,7 +17,6 @@
 
 void kernel_main() {
   vga_init();
-  printf("%x\n", STATIC_END);
   printf("Initializing paging...\n");
   setup_paging();
   unsigned int i;

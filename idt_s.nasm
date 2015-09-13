@@ -1,3 +1,4 @@
+BITS 32
 extern int_handler
 
 %macro isr_noerr 1
