@@ -21,4 +21,7 @@ void *malloc(unsigned int);
 void *malloc_user(unsigned int, int);
 void *malloc_ap(unsigned int, int, void *, int);
 void free(void *);
+
+#define NULL ((void *) 0)
+
 #endif

@@ -1,4 +1,10 @@
-BITS 32
+section .bss
+global idt
+idt:
+resb 256*8
+
+section .text
+
 extern int_handler
 
 %macro isr_noerr 1
@@ -77,10 +83,6 @@ isr_common_stub:
 	sti
 	or WORD [esp + 8], 0x200
 	iret
-
-global idt
-idt:
-resb 256*8
 
 global idtp
 idtp:

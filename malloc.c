@@ -37,8 +37,8 @@ struct malloc_header *next_block(struct malloc_header *block) {
   return block->next;
 }
 
-int get_ptr_distance(struct malloc_header *a, struct malloc_header *b) {
-  return (int) (((void *) a) - ((void *) b));
+unsigned int get_ptr_distance(struct malloc_header *a, struct malloc_header *b) {
+  return (unsigned int) (((void *) a) - ((void *) b));
 }
 
 void *alloc_old_block(struct malloc_header *block, unsigned int size) {
@@ -52,7 +52,7 @@ void *alloc_old_block(struct malloc_header *block, unsigned int size) {
 void *alloc_new_block(struct malloc_header *arena_head, unsigned int size, int user) {
   struct malloc_header *p, *q = 0;
   p = arena_head;
-  while((p = next_block(p)) > 0) {
+  while((p = next_block(p))) {
     q = p;
   }
   // at this point, p = 0 and q = the last block, or 0 if there aren't
@@ -84,7 +84,7 @@ void *malloc_ap(unsigned int size, int align, void *phy, int user) {
   if(user) arena_head = (struct malloc_header *) malloc_arena_user;
   else arena_head = (struct malloc_header *) malloc_arena_kernel;
   struct malloc_header *p = arena_head;
-  while((p = next_block(p)) > 1) {
+  while((p = next_block(p))) {
     if(p->btype == TYPE_FREE) {
       if(get_ptr_distance(p->next, p) > size) {
 	return alloc_old_block(p, size);

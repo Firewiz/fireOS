@@ -51,7 +51,6 @@ void setup_paging() {
   int i;
   unsigned int ptable_addr;
   for(i = 0; i < 1024; i++) {
-    ptable_addr = &ptables[i * 1024];
     ptable_addr = (unsigned int) ptables;
     ptable_addr += (i * 0x1000);
     pdir[i] = ptable_addr | USER | PRESENT | RW;

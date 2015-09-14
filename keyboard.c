@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "asmintr.h"
 #include "vga.h"
+#include "malloc.h"
 
 unsigned char *kb_buffer;
 volatile int kb_write, kb_read, kb_state = 0;
