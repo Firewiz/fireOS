@@ -81,7 +81,7 @@ void *alloc_new_block(struct malloc_header *arena_head, unsigned int size, int u
 
 void *malloc_ap(unsigned int size, int align, void *phy, int user) {
   struct malloc_header *arena_head;
-  printf("MALLOC %x %d\n", size, user);
+  //  printf("MALLOC %x %d\n", size, user);
   if(user) arena_head = (struct malloc_header *) malloc_arena_user;
   else arena_head = (struct malloc_header *) malloc_arena_kernel;
   struct malloc_header *p = arena_head;

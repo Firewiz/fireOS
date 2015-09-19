@@ -3,6 +3,6 @@
 #include <unistd.h>
 
 int main(void) {
-  malloc(1);
+  sys_write(0, "Hello, World!", 13);
   return 0;
 }

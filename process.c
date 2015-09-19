@@ -25,7 +25,7 @@ process *get_proc(pid_t id) {
 static int ap_recurse_count = 0;
 
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner) {
-  printf("AP (%d) %x %x %d %d\n", ap_recurse_count++, base, offset, user, owner);
+  //  printf("AP (%d) %x %x %d %d\n", ap_recurse_count++, base, offset, user, owner);
   unsigned int i;
   unsigned int phy;
   process *proc = get_proc(owner);
@@ -38,7 +38,6 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
       // only alter the page list if these were user pages
       if(proc != 0) {
 	if(user) {
-	  printf("Recursing\n");
 	  if(proc->pages == 0) {
 	    proc->pages = malloc(sizeof(proc_page_list));
 	    pl = proc->pages;
@@ -56,7 +55,7 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
     }
   }
   phy = nonidentity_page((i + base + offset) / 0x1000, user);
-  printf("AP (%d) done\n", --ap_recurse_count);
+  //  printf("AP (%d) done\n", --ap_recurse_count);
 }
 
 void int_83(int no, struct regs *r) {
@@ -99,6 +98,17 @@ void run_init(void (*entry)()) {
   asm volatile("int $0x83");
 }
 
+void yield() {
+  process_list *pl = plist;
+  while(pl->next) {
+    if(pl->p->id == current_pid) break;
+    pl = pl->next;
+  }
+  if(pl->next) pl->next->prev = pl->prev;
+  if(pl->prev) pl->prev->next = pl->next;
+  pl->p->flags &= ~PF_ACTIVE;
+  free(pl);
+}
 
 pid_t fork(void) {
   pid_t new_pid;

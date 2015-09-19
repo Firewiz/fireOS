@@ -15,7 +15,7 @@ typedef struct proc_page_list_t proc_page_list;
 
 #define FD_FLAG_RD  0x01
 #define FD_FLAG_WR  0x02
-#define FD_FLAG_TTY 0x03
+#define FD_FLAG_TTY 0x04
 
 struct proc_fd_list_t {
   struct proc_fd_list_t *next;
@@ -59,5 +59,6 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
 void init_mt();
 void run_init(void (*entry)());
 pid_t fork(void);
+void yield();
 void next_ctx(struct regs *r, int save_state);
 #endif
