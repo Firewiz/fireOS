@@ -72,7 +72,7 @@ isr_common_stub:
 	mov eax, int_handler
 	call eax
 	mov ecx, eax
-	pop eax
+	pop ecx
 	
 	pop gs
 	pop fs
