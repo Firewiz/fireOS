@@ -51,6 +51,7 @@ typedef struct process_list_t process_list;
 #ifndef DEFS
 extern process_list *plist;
 extern volatile pid_t current_pid;
+extern int mt_enabled;
 #endif
 
 process *get_proc(pid_t id);
@@ -58,5 +59,5 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
 void init_mt();
 void run_init(void (*entry)());
 pid_t fork(void);
-void next_ctx(struct regs *r);
+void next_ctx(struct regs *r, int save_state);
 #endif

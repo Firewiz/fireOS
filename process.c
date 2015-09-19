@@ -10,7 +10,8 @@
 
 // plist is sorted in ascending pid order
 process_list *plist;
-volatile pid_t current_pid;
+volatile pid_t current_pid = 0;
+int mt_enabled = 0;
 
 process *get_proc(pid_t id) {
   if(plist == 0) return 0;
@@ -21,20 +22,23 @@ process *get_proc(pid_t id) {
   return 0;
 }
 
+static int ap_recurse_count = 0;
+
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner) {
-  printf("AP %x %x %d %d\n", base, offset, user, owner);
+  printf("AP (%d) %x %x %d %d\n", ap_recurse_count++, base, offset, user, owner);
   unsigned int i;
   unsigned int phy;
   process *proc = get_proc(owner);
   proc_page_list *pl = proc->pages;
   for(i = 0; i < offset; i += 0x1000) {
     if(!is_present((i + base) / 0x1000)) {
-      printf("paging in %x\n", (i + base) / 0x1000);
+      //      printf("paging in %x\n", (i + base) / 0x1000);
       phy = nonidentity_page((i + base) / 0x1000, user);
-      printf("paged\n");
+      //      printf("paged\n");
       // only alter the page list if these were user pages
       if(proc != 0) {
 	if(user) {
+	  printf("Recursing\n");
 	  if(proc->pages == 0) {
 	    proc->pages = malloc(sizeof(proc_page_list));
 	    pl = proc->pages;
@@ -44,17 +48,25 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
 	    pl = pl->next;
 	  }
 	}
+	asm volatile ("nop");
 	pl->physical = phy;
 	pl->virtual = (i + base) / 0x1000;
 	pl->next = 0;
       }
     }
   }
-  printf("AP done\n");
+  phy = nonidentity_page((i + base + offset) / 0x1000, user);
+  printf("AP (%d) done\n", --ap_recurse_count);
+}
+
+void int_83(int no, struct regs *r) {
+  mt_enabled = 1;
+  next_ctx(r, 0);
 }
 
 void init_mt() {
   printf("In init_mt().\n");
+  install_handler(int_83, 0x83);
   plist = malloc(sizeof(process_list));
   printf("Allocated process list\n");
   current_pid = 0;
@@ -84,6 +96,7 @@ void run_init(void (*entry)()) {
   init->state->eip = (unsigned int) entry;
   init->flags |= PF_ACTIVE;
   printf("INIT active!\n");
+  asm volatile("int $0x83");
 }
 
 
@@ -179,7 +192,7 @@ pid_t fork(void) {
 	    // because the compiler ~~is stupid~~ doesn't know better.
 }
 
-void next_ctx(struct regs *r) {
+void next_ctx(struct regs *r, int save_state) {
   //  printf("NCTX!\n");
   process_list *pl = plist;
   int new_pid = -1;
@@ -198,11 +211,12 @@ void next_ctx(struct regs *r) {
     }
   }
   if(new_pid == -1) return; // There are no processes
-  process *new = get_proc(new_pid);
-  if(r->cs != 0x08) {
+  if(save_state) {
     process *old = get_proc(current_pid);
     memcpy(old->state, r, sizeof(struct regs));
   }
+  process *new = get_proc(new_pid);
   memcpy(r, new->state, sizeof(struct regs));
+  //  printf("Loaded process with EIP %x\n", r->eip);
   set_kernel_stack((unsigned int) new->kernel_stack);
 }

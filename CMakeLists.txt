@@ -41,4 +41,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/fs_mount)
 
 add_executable(init.exe modules/init.c)
 add_dependencies(init.exe c)
+add_custom_command(
+  TARGET init.exe
+  POST_BUILD
+  COMMAND /bin/sync
+  COMMENT "Synchronizing file system..."
+  )
 target_link_libraries(init.exe "-L../libc/lib" c)
