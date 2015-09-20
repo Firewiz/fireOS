@@ -26,6 +26,7 @@ static int ap_recurse_count = 0;
 
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner) {
   //  printf("AP (%d) %x %x %d %d\n", ap_recurse_count++, base, offset, user, owner);
+  if(base < 0x8000 && user) for(;;);
   unsigned int i;
   unsigned int phy;
   process *proc = get_proc(owner);
@@ -38,6 +39,7 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
       // only alter the page list if these were user pages
       if(proc != 0) {
 	if(user) {
+	  printf("Updating page list\n");
 	  if(proc->pages == 0) {
 	    proc->pages = malloc(sizeof(proc_page_list));
 	    pl = proc->pages;
@@ -46,15 +48,16 @@ void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owne
 	    pl->next = malloc(sizeof(proc_page_list));
 	    pl = pl->next;
 	  }
+	  asm volatile ("nop");
+	  pl->physical = phy;
+	  pl->virtual = (i + base) / 0x1000;
+	  pl->next = 0;
 	}
-	asm volatile ("nop");
-	pl->physical = phy;
-	pl->virtual = (i + base) / 0x1000;
-	pl->next = 0;
       }
     }
   }
-  phy = nonidentity_page((i + base + offset) / 0x1000, user);
+  if(!is_present((i + base + offset) / 0x1000))
+    phy = nonidentity_page((i + base + offset) / 0x1000, user);
   //  printf("AP (%d) done\n", --ap_recurse_count);
 }
 
@@ -111,6 +114,7 @@ void yield() {
 }
 
 pid_t fork(void) {
+  printf("Fork!\n");
   pid_t new_pid;
   for(new_pid = 0; get_proc(new_pid) != 0; new_pid++) ;
   process_list *pl = plist;
@@ -137,6 +141,7 @@ pid_t fork(void) {
   // list entry, inserted in the right spot.
   process *old_proc = get_proc(current_pid);
   process *new_proc = malloc(sizeof(process));
+  new_pl_entry->p = new_proc;
   // Copy over the file descriptor list
   proc_fd_list *ofd = old_proc->fds;
   if(ofd) {
@@ -179,18 +184,22 @@ pid_t fork(void) {
     new_pages->next->virtual = old_pages->next->virtual;
     new_pages->next->next = 0;
     old_pages = old_pages->next;
+    new_pages = new_pages->next;
   }
   // Now, we can actually remap the pages.
   new_pages = new_proc->pages;
   while(new_pages) {
-    new_pages->physical = nonidentity_page(FAKE_PAGE_BASE, 1); // FAKE_PAGE_BASE is now paged in
-    memcpy((void *) FAKE_PAGE_BASE, (void *) new_pages->virtual, 0x1000);        // our data is copied
+    new_pages->physical = nonidentity_page(FAKE_PAGE_BASE / 0x1000, 1); // FAKE_PAGE_BASE is now paged in
+    memcpy((void *) FAKE_PAGE_BASE, (void *) (new_pages->virtual * 0x1000), 0x1000); // our data is copied
     mapped_page(new_pages->virtual, new_pages->physical, 1);   // and the new page is set.
+    printf("Paged in VM %x, new_proc = %x\n", new_pages->virtual, new_proc);
+    new_pages = new_pages->next;
   }
   // We're now using the page table of the child process. However,
   // we're stuck in a kind of weird limbo here as the parent process's
   // data is not being updated, which means anything we do here is
-  // affecting the child process _only_. Unfortunately, this includes
+  // affecting the child
+  // process _only_. Unfortunately, this includes
   // important things such as returning from this function.
 
   // This is not a problem, because fork() runs on a separate
@@ -198,8 +207,9 @@ pid_t fork(void) {
   // return value.
   new_proc->state->eax = 0;
   old_proc->state->eax = new_pid;
-  return 0; // return value is discarded, but we have it here anyways
-	    // because the compiler ~~is stupid~~ doesn't know better.
+  new_proc->id = new_pid;
+  new_proc->flags |= PF_ACTIVE;
+  return 0;
 }
 
 void next_ctx(struct regs *r, int save_state) {
@@ -221,12 +231,18 @@ void next_ctx(struct regs *r, int save_state) {
     }
   }
   if(new_pid == -1) return; // There are no processes
+  process *nproc = get_proc(new_pid);
+  pl = plist;
+  proc_page_list *pages = nproc->pages;
+  while(pages) {
+    mapped_page(pages->virtual, pages->physical, 1);
+    pages = pages->next;
+  }
   if(save_state) {
     process *old = get_proc(current_pid);
     memcpy(old->state, r, sizeof(struct regs));
   }
-  process *new = get_proc(new_pid);
-  memcpy(r, new->state, sizeof(struct regs));
-  //  printf("Loaded process with EIP %x\n", r->eip);
-  set_kernel_stack((unsigned int) new->kernel_stack);
+  memcpy(r, nproc->state, sizeof(struct regs));
+  //printf("Loaded process %d\n", new_pid);
+  set_kernel_stack((unsigned int) nproc->kernel_stack);
 }

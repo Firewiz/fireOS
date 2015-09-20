@@ -22,7 +22,7 @@ add_custom_target(version DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
 
 add_executable(fireos.bin kernel.c vga.c stdlib.c asmintr.c idt_c.c
 inthandle.c irq.c keyboard.c disk.c fat.c printf.c malloc.c boot.nasm
-idt_s.nasm paging.c timer.c shell.c elf.c gdt_c.c gdt_s.nasm process.c
+idt_s.nasm paging_c.c paging_s.nasm timer.c shell.c elf.c gdt_c.c gdt_s.nasm process.c
 syscall.c syscall_handlers.c)
 
 add_dependencies(fireos.bin version)

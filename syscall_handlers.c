@@ -14,15 +14,11 @@ SCH(int, sys_write) { // 2
   int fd = SYSCALL_ARG(0, int);
   char *wbuf = SYSCALL_ARG(1, char *);
   int len = SYSCALL_ARG(2, int);
-  printf("write %x %x %d\n", fd, wbuf, len);
   proc_fd_list *fdl = get_proc(current_pid)->fds;
   while(fdl) {
     if(fdl->fd == fd) {
-      printf("Found the FD\n");
       if(!(fdl->fd_flags & FD_FLAG_WR)) return -1;
-      printf("Flags check out\n");
       if(fdl->fd_flags & FD_FLAG_TTY) {
-	printf("Writing\n");
 	int i;
 	for(i = 0; i < len; i++) {
 	  printf("%c", wbuf[i]);
@@ -49,14 +45,12 @@ SCH(int, sys_getfd) { // 3
   fdl->next = malloc_user(sizeof(proc_fd_list), 1);
   fdl->next->fd = ++fd;
   fdl->next->fd_flags = 0;
-  printf("Allocated FD %d\n", fd);
   return fd;
 }
 
 SCH(void, sys_setfdflag) { // 4
   int fd = SYSCALL_ARG(0, int);
   unsigned int flags = SYSCALL_ARG(1, unsigned int);
-  printf("Setting %d to %x\n", fd, flags);
   proc_fd_list *fdl = get_proc(current_pid)->fds;
   while(fdl) {
     if(fdl->fd == fd) {
@@ -71,7 +65,6 @@ SCH(void, sys_setfdflag) { // 4
 SCH(void, sys_clearfdflag) { // 5
   int fd = SYSCALL_ARG(0, int);
   unsigned int flags = SYSCALL_ARG(1, unsigned int);
-  printf("Setting %d to ~%x\n", fd, flags);
   proc_fd_list *fdl = get_proc(current_pid)->fds;
   while(fdl) {
     if(fdl->fd == fd) {
@@ -85,8 +78,11 @@ SCH(void, sys_clearfdflag) { // 5
 
 SCH(void *, sys_allocbuf) { // 7
   void *a = malloc_user(SYSCALL_ARG(0, int), 1);
-  printf("A %x\n", a);
   return a;
+}
+
+SCH(void, sys_fork) { // 10
+  fork();
 }
 
 void register_syscall_handlers() {
@@ -96,6 +92,7 @@ void register_syscall_handlers() {
   install_syscall_handler(sys_setfdflag, 4);
   install_syscall_handler(sys_clearfdflag, 5);
   install_syscall_handler(sys_allocbuf, 7);
+  install_syscall_handler(sys_fork, 10);
 }
 
 

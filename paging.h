@@ -15,4 +15,5 @@ void mapped_page(unsigned int, unsigned int, int);
 void unmap_page(unsigned int);
 int is_present(unsigned int);
 unsigned int get_mapping(unsigned int);
+extern void vm_page_inval(void);
 #endif

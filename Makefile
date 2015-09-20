@@ -578,29 +578,37 @@ modules/init.c.s:
 	$(MAKE) -f CMakeFiles/init.exe.dir/build.make CMakeFiles/init.exe.dir/modules/init.c.s
 .PHONY : modules/init.c.s
 
-paging.o: paging.c.o
-.PHONY : paging.o
+paging_c.o: paging_c.c.o
+.PHONY : paging_c.o
 
 # target to build an object file
-paging.c.o:
-	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging.c.o
-.PHONY : paging.c.o
+paging_c.c.o:
+	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging_c.c.o
+.PHONY : paging_c.c.o
 
-paging.i: paging.c.i
-.PHONY : paging.i
+paging_c.i: paging_c.c.i
+.PHONY : paging_c.i
 
 # target to preprocess a source file
-paging.c.i:
-	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging.c.i
-.PHONY : paging.c.i
+paging_c.c.i:
+	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging_c.c.i
+.PHONY : paging_c.c.i
 
-paging.s: paging.c.s
-.PHONY : paging.s
+paging_c.s: paging_c.c.s
+.PHONY : paging_c.s
 
 # target to generate assembly for a file
-paging.c.s:
-	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging.c.s
-.PHONY : paging.c.s
+paging_c.c.s:
+	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging_c.c.s
+.PHONY : paging_c.c.s
+
+paging_s.o: paging_s.nasm.o
+.PHONY : paging_s.o
+
+# target to build an object file
+paging_s.nasm.o:
+	$(MAKE) -f CMakeFiles/fireos.bin.dir/build.make CMakeFiles/fireos.bin.dir/paging_s.nasm.o
+.PHONY : paging_s.nasm.o
 
 printf.o: printf.c.o
 .PHONY : printf.o
@@ -859,9 +867,10 @@ help:
 	@echo "... modules/init.o"
 	@echo "... modules/init.i"
 	@echo "... modules/init.s"
-	@echo "... paging.o"
-	@echo "... paging.i"
-	@echo "... paging.s"
+	@echo "... paging_c.o"
+	@echo "... paging_c.i"
+	@echo "... paging_c.s"
+	@echo "... paging_s.o"
 	@echo "... printf.o"
 	@echo "... printf.i"
 	@echo "... printf.s"

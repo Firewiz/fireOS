@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 int main(void) {
-  sys_write(0, "Hello, World!", 13);
+  pid_t p = fork();
+  printf("Hello, World!\n");
   return 0;
 }
