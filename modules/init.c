@@ -4,6 +4,10 @@
 
 int main(void) {
   pid_t p = fork();
-  printf("Hello, World!\n");
+  if(p) {
+    printf("Hello, World!\n");
+  } else {
+    printf("wtf\n");
+  }
   return 0;
 }

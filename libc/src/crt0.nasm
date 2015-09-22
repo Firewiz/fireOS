@@ -7,7 +7,9 @@ _start:
 	call _setup_stdio
 	call main
 	call sys_exit
-;	mov eax, 1
-;	int 0x80
+	push 0
+	mov eax, 1
+	int 0x80
+	pop eax
 hang:
 	jmp hang

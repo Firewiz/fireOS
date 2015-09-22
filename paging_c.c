@@ -83,7 +83,7 @@ unsigned int nonidentity_page(unsigned int page_index, int user) {
 }
 
 void mapped_page(unsigned int page_index, unsigned int phy_addr, int user) {
-  printf("Mapping page %x to %x\n", page_index, phy_addr);
+  //  printf("Mapping page %x to %x\n", page_index, phy_addr);
   if(user) {
     ptables[page_index] = (phy_addr * 0x1000) | (PRESENT | RW | USER);
   } else {

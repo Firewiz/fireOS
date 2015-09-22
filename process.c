@@ -87,7 +87,7 @@ void init_mt() {
   allocate_pages((unsigned int) USER_STACK, PROCESS_STACK_SIZE, 1, 0);
   printf("Allocated usermode stack.\n");
   init->kernel_stack = (unsigned char *) KERNEL_STACK + KERNEL_STACK_SIZE;
-  allocate_pages((unsigned int) KERNEL_STACK, KERNEL_STACK_SIZE, 1, 0);
+  allocate_pages((unsigned int) KERNEL_STACK, KERNEL_STACK_SIZE, 0, 0);
   init->state->gs = init->state->es = init->state->fs = init->state->ds = init->state->ss = 0x23;
   init->state->ebp = init->state->esp = init->state->useresp = (unsigned int) init->stack;
   init->state->cs = 0x1b;
@@ -110,7 +110,22 @@ void yield() {
   if(pl->next) pl->next->prev = pl->prev;
   if(pl->prev) pl->prev->next = pl->next;
   pl->p->flags &= ~PF_ACTIVE;
-  free(pl);
+  proc_fd_list *fdl = pl->p->fds, *fdt;
+  while(fdl) {
+    fdt = fdl->next;
+    free(fdl);
+    fdl = fdt;
+  }
+  proc_page_list *pgl = pl->p->pages, *pgt;
+  while(pgl) {
+    pgt = pgl->next;
+    unmap_page(pgl->virtual);
+    free(pgl);
+    pgl = pgt;
+  }
+  free(pl->p->state);
+  free(pl->p);
+  printf("Process %d ended\n", current_pid);
 }
 
 pid_t fork(void) {
@@ -192,7 +207,7 @@ pid_t fork(void) {
     new_pages->physical = nonidentity_page(FAKE_PAGE_BASE / 0x1000, 1); // FAKE_PAGE_BASE is now paged in
     memcpy((void *) FAKE_PAGE_BASE, (void *) (new_pages->virtual * 0x1000), 0x1000); // our data is copied
     mapped_page(new_pages->virtual, new_pages->physical, 1);   // and the new page is set.
-    printf("Paged in VM %x, new_proc = %x\n", new_pages->virtual, new_proc);
+    //    printf("Paged in VM %x, new_proc = %x\n", new_pages->virtual, new_proc);
     new_pages = new_pages->next;
   }
   // We're now using the page table of the child process. However,
@@ -209,24 +224,31 @@ pid_t fork(void) {
   old_proc->state->eax = new_pid;
   new_proc->id = new_pid;
   new_proc->flags |= PF_ACTIVE;
+  printf("Split\n");
   return 0;
 }
 
 void next_ctx(struct regs *r, int save_state) {
-  //  printf("NCTX!\n");
+  //printf("NCTX!\n");
   process_list *pl = plist;
   int new_pid = -1;
   // Assumptions: Process id 0 always exists. (it's init, so if it's
   // gone we have other problems). The process list is in sorted
   // order. (if it isn't, fork() is whacked)
   while(pl) {
-    if(pl->p->id > current_pid && pl->p->flags & PF_ACTIVE) new_pid = pl->p->id;
+    if(pl->p->id > current_pid && pl->p->flags & PF_ACTIVE) {
+      new_pid = pl->p->id;
+      break;
+    }
     pl = pl->next;
   }
   if(pl == 0) {
     pl = plist;
     while(pl) {
-      if(pl->p->flags & PF_ACTIVE) new_pid = pl->p->id;
+      if(pl->p->flags & PF_ACTIVE) {
+	new_pid = pl->p->id;
+	break;
+      }
       pl = pl->next;
     }
   }
@@ -243,6 +265,7 @@ void next_ctx(struct regs *r, int save_state) {
     memcpy(old->state, r, sizeof(struct regs));
   }
   memcpy(r, nproc->state, sizeof(struct regs));
-  //printf("Loaded process %d\n", new_pid);
+  //  printf("Loaded process %d (%x)\n", new_pid, r->eip);
   set_kernel_stack((unsigned int) nproc->kernel_stack);
+  current_pid = new_pid;
 }
