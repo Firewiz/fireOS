@@ -3,11 +3,10 @@
 #include <unistd.h>
 
 int main(void) {
-  pid_t p = fork();
-  if(p) {
+  if(fork()){
     printf("Hello, World!\n");
   } else {
-    printf("wtf\n");
+    printf("!dlroW, olleH\n");
   }
   return 0;
 }

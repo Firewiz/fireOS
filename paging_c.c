@@ -104,6 +104,9 @@ unsigned int get_mapping(unsigned int virt_addr) {
 void unmap_page(unsigned int page_index) {
   ptables[page_index] = 0;
   clear_frame(page_index);
+  unsigned int cr3;
+  asm volatile("mov %%cr3, %0" : "=r"(cr3));
+  asm volatile("mov %0, %%cr3" :: "r"(cr3));
 }
 
 int is_present(unsigned int page_index) {

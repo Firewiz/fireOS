@@ -1,5 +1,7 @@
 #include "idt.h"
 #include "printf.h"
+#include "process.h"
+#include "stdlib.h"
 
 void (*int_handlers[256])(int no, struct regs *r);
 

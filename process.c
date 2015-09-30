@@ -82,11 +82,11 @@ void init_mt() {
   printf("Allocated state buffer.\n");
   init->pages = 0;
   init->fds = 0;
-  init->stack = (unsigned char *) USER_STACK + PROCESS_STACK_SIZE;
+  init->stack = (unsigned char *) USER_STACK + PROCESS_STACK_SIZE - 8;
   printf("Allocating usermode stack...\n");
   allocate_pages((unsigned int) USER_STACK, PROCESS_STACK_SIZE, 1, 0);
   printf("Allocated usermode stack.\n");
-  init->kernel_stack = (unsigned char *) KERNEL_STACK + KERNEL_STACK_SIZE;
+  init->kernel_stack = (unsigned char *) KERNEL_STACK + KERNEL_STACK_SIZE - 8;
   allocate_pages((unsigned int) KERNEL_STACK, KERNEL_STACK_SIZE, 0, 0);
   init->state->gs = init->state->es = init->state->fs = init->state->ds = init->state->ss = 0x23;
   init->state->ebp = init->state->esp = init->state->useresp = (unsigned int) init->stack;
@@ -102,6 +102,7 @@ void run_init(void (*entry)()) {
 }
 
 void yield() {
+  printf("Process %d ending\n", current_pid);
   process_list *pl = plist;
   while(pl->next) {
     if(pl->p->id == current_pid) break;
@@ -109,13 +110,14 @@ void yield() {
   }
   if(pl->next) pl->next->prev = pl->prev;
   if(pl->prev) pl->prev->next = pl->next;
-  pl->p->flags &= ~PF_ACTIVE;
+  pl->p->flags = 0;
   proc_fd_list *fdl = pl->p->fds, *fdt;
   while(fdl) {
     fdt = fdl->next;
     free(fdl);
     fdl = fdt;
   }
+  asm volatile ("nop");
   proc_page_list *pgl = pl->p->pages, *pgt;
   while(pgl) {
     pgt = pgl->next;
@@ -126,10 +128,13 @@ void yield() {
   free(pl->p->state);
   free(pl->p);
   printf("Process %d ended\n", current_pid);
+  asm volatile ("sti");
+  for(;;);
 }
 
-pid_t fork(void) {
-  printf("Fork!\n");
+pid_t fork(struct regs *r) {
+  printf("Fork! (%x)\n", r->eip);
+  memcpy(get_proc(current_pid)->state, r, sizeof(struct regs));
   pid_t new_pid;
   for(new_pid = 0; get_proc(new_pid) != 0; new_pid++) ;
   process_list *pl = plist;
@@ -176,6 +181,7 @@ pid_t fork(void) {
   memcpy(new_proc, old_proc, sizeof(process));
   // fork() must be called by system call. Therefore, we have an
   // up-to-date state, and interrupts are disabled.
+  new_proc->state = malloc(sizeof(struct regs));
   memcpy(new_proc->state, old_proc->state, sizeof(struct regs));
   // Now comes the hard part: remapping the page table. The problem is
   // that, at some point, we will have to remap the pages containing
@@ -223,8 +229,11 @@ pid_t fork(void) {
   new_proc->state->eax = 0;
   old_proc->state->eax = new_pid;
   new_proc->id = new_pid;
-  new_proc->flags |= PF_ACTIVE;
-  printf("Split\n");
+  //new_proc->state->useresp += 0x10;
+  //  old_proc->flags &= ~PF_ACTIVE;
+  printf("Split %x %x\n", new_proc->state->useresp, old_proc->state->useresp);
+  //  asm volatile("int $0x20");
+  //  asm volatile("int $0x20");
   return 0;
 }
 
@@ -253,11 +262,18 @@ void next_ctx(struct regs *r, int save_state) {
     }
   }
   if(new_pid == -1) return; // There are no processes
+  process *oproc = get_proc(current_pid);
+  proc_page_list *op = oproc->pages;
+  while(op) {
+    unmap_page(op->virtual);
+    op = op->next;
+  }
   process *nproc = get_proc(new_pid);
   pl = plist;
   proc_page_list *pages = nproc->pages;
   while(pages) {
     mapped_page(pages->virtual, pages->physical, 1);
+    printf("Paged in %x -> %x\n", pages->virtual, pages->physical);
     pages = pages->next;
   }
   if(save_state) {
@@ -265,7 +281,7 @@ void next_ctx(struct regs *r, int save_state) {
     memcpy(old->state, r, sizeof(struct regs));
   }
   memcpy(r, nproc->state, sizeof(struct regs));
-  //  printf("Loaded process %d (%x)\n", new_pid, r->eip);
-  set_kernel_stack((unsigned int) nproc->kernel_stack);
+  printf("Loaded process %d (%x %x %x)\n", new_pid, r->eip, r->useresp, r->ss);
+  set_kernel_stack((unsigned int) KERNEL_STACK + KERNEL_STACK_SIZE - 16);
   current_pid = new_pid;
 }

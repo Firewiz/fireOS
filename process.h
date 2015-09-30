@@ -58,7 +58,7 @@ process *get_proc(pid_t id);
 void allocate_pages(unsigned int base, unsigned int offset, int user, pid_t owner);
 void init_mt();
 void run_init(void (*entry)());
-pid_t fork(void);
+pid_t fork(struct regs *r);
 void yield();
 void next_ctx(struct regs *r, int save_state);
 #endif

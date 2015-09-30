@@ -4,7 +4,8 @@
 #include "printf.h"
 
 #define SYSCALL_ARG(n, t) ((t) *((int *) stack_base + n + 1))
-#define SCH(r, n) r n(void *stack_base)
+#define SYSCALL_STATE() r
+#define SCH(t, n) t n(struct regs *r, void *stack_base)
 
 SCH(void, sys_exit) { // 1
   yield();
@@ -38,13 +39,16 @@ SCH(int, sys_getfd) { // 3
     fdl = malloc_user(sizeof(proc_fd_list), 1);
     fdl->fd = 0;
     fdl->fd_flags = 0;
+    fdl->next = 0;
     get_proc(current_pid)->fds = fdl;
+    printf("Proc %d's FDL set to %x (%x %x %x)\n", current_pid, fdl, fdl->next, fdl->fd, fdl->fd_flags);
     return 0;
   }
   while(fdl->next) { fd++; fdl = fdl->next; }
   fdl->next = malloc_user(sizeof(proc_fd_list), 1);
   fdl->next->fd = ++fd;
   fdl->next->fd_flags = 0;
+  fdl->next->next = 0;
   return fd;
 }
 
@@ -52,6 +56,7 @@ SCH(void, sys_setfdflag) { // 4
   int fd = SYSCALL_ARG(0, int);
   unsigned int flags = SYSCALL_ARG(1, unsigned int);
   proc_fd_list *fdl = get_proc(current_pid)->fds;
+  printf("Proc %d's FDL is %x (%x %x %x)\n", current_pid, fdl, fdl->next, fdl->fd, fdl->fd_flags);
   while(fdl) {
     if(fdl->fd == fd) {
       fdl->fd_flags |= flags;
@@ -82,7 +87,7 @@ SCH(void *, sys_allocbuf) { // 7
 }
 
 SCH(void, sys_fork) { // 10
-  fork();
+  fork(SYSCALL_STATE());
 }
 
 void register_syscall_handlers() {

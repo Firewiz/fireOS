@@ -26,10 +26,16 @@ enum vga_color {
 #define VGA_HEIGHT 25
 
 void vga_init();
+void serial_init();
+int poll_serial();
+void serial_putchar(char);
 void vga_setcolor(unsigned char);
 void vga_addch(char, unsigned char, unsigned char, unsigned char);
 void vga_scroll();
 void vga_putchar(char);
 void vga_write(char *);
 void vga_setcurs(char, char);
+
+#define VGASERIAL_COM1 0x3f8
+
 #endif

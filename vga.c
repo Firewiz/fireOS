@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "asmintr.h"
 #include "static.h"
+#include "config.h"
 
 volatile unsigned char vga_row, vga_col;
 unsigned char vga_color;
@@ -22,7 +23,40 @@ void vga_init() {
   }
   outb(0x3d4, 0xa);
   outb(0x3d5, 0x0d);
+  serial_init();
 }
+
+#ifdef VGA_SERIAL
+void serial_init() {
+  outb(VGASERIAL_COM1 + 1, 0x00);
+  outb(VGASERIAL_COM1 + 3, 0x80);
+  outb(VGASERIAL_COM1 + 0, 0x03);
+  outb(VGASERIAL_COM1 + 1, 0x00);
+  outb(VGASERIAL_COM1 + 3, 0x03);
+  outb(VGASERIAL_COM1 + 2, 0xC7);
+  outb(VGASERIAL_COM1 + 4, 0x0B);
+}
+
+int poll_serial() {
+  return !(inb(VGASERIAL_COM1 + 5) & 0x20);
+}
+
+void serial_putchar(char c) {
+  while(poll_serial())
+    ;
+  outb(VGASERIAL_COM1, c);
+}
+#else
+void serial_init() {
+  return;
+}
+int poll_serial() {
+  return 0;
+}
+void serial_putchar(char c) {
+  return;
+}
+#endif
 
 void vga_setcolor(unsigned char color) {
   vga_color = color;
@@ -45,6 +79,7 @@ void vga_scroll() {
 }
 
 void vga_putchar(char c) {
+  serial_putchar(c);
   switch(c) {
   case '\t':
     vga_col = vga_col + 8 - (vga_col % 8);
