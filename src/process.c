@@ -232,8 +232,6 @@ pid_t fork(struct regs *r) {
   //new_proc->state->useresp += 0x10;
   //  old_proc->flags &= ~PF_ACTIVE;
   printf("Split %x %x\n", new_proc->state->useresp, old_proc->state->useresp);
-  //  asm volatile("int $0x20");
-  //  asm volatile("int $0x20");
   return 0;
 }
 
@@ -262,11 +260,14 @@ void next_ctx(struct regs *r, int save_state) {
     }
   }
   if(new_pid == -1) return; // There are no processes
+  printf("Loading process %d\n", new_pid);
   process *oproc = get_proc(current_pid);
-  proc_page_list *op = oproc->pages;
-  while(op) {
-    unmap_page(op->virtual);
-    op = op->next;
+  if(oproc) {
+    proc_page_list *op = oproc->pages;
+    while(op) {
+      unmap_page(op->virtual);
+      op = op->next;
+    }
   }
   process *nproc = get_proc(new_pid);
   pl = plist;
@@ -276,12 +277,20 @@ void next_ctx(struct regs *r, int save_state) {
     printf("Paged in %x -> %x\n", pages->virtual, pages->physical);
     pages = pages->next;
   }
-  if(save_state) {
-    process *old = get_proc(current_pid);
-    memcpy(old->state, r, sizeof(struct regs));
+  if(oproc && save_state) {
+    memcpy(oproc->state, r, sizeof(struct regs));
   }
+  printf("Loading new state...\n");
   memcpy(r, nproc->state, sizeof(struct regs));
   printf("Loaded process %d (%x %x %x)\n", new_pid, r->eip, r->useresp, r->ss);
+  printf("Stack dump (%x):\n", r->useresp);
+  unsigned int s = r->useresp;
+  int i;
+  for(i = 0; i < 32; i++) {
+    printf("%x ", *((unsigned int *) s - i));
+    if(i % 4 == 3) printf("\n");
+  }
   set_kernel_stack((unsigned int) KERNEL_STACK + KERNEL_STACK_SIZE - 16);
   current_pid = new_pid;
+  printf("Switched\n");
 }
